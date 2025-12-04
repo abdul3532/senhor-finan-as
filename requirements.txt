@@ -1,0 +1,10 @@
+streamlit
+google-generativeai
+langfuse
+feedparser
+beautifulsoup4
+reportlab
+python-dotenv
+pandas
+plotly
+PyPDF2
