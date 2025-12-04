@@ -1,7 +1,7 @@
 import os
 import json
 import google.generativeai as genai
-from langfuse.decorators import observe
+from langfuse import observe
 from typing import List, Dict, Any
 import logging
 
