@@ -23,7 +23,7 @@ async def generate_report(news_items: List[NewsItem]):
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": "attachment; filename=finmate_briefing.pdf"
+                "Content-Disposition": "attachment; filename=senhor_financas_briefing.pdf"
             }
         )
     

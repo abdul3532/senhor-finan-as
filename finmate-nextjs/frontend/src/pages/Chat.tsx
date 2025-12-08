@@ -157,11 +157,9 @@ export default function Chat() {
                     {/* Header */}
                     <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/20">
-                                <Bot className="w-6 h-6 text-white" />
-                            </div>
+                            <img src="/senhor-logo.png" alt="AI" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/20" />
                             <div>
-                                <h2 className="font-semibold text-white">FinMate AI</h2>
+                                <h2 className="font-semibold text-white">Senhor Finanças AI</h2>
                                 <p className="text-xs text-green-400 flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                                     Online & Ready

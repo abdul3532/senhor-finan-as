@@ -15,7 +15,7 @@ logging.basicConfig(
 
 # Create FastAPI app
 app = FastAPI(
-    title="FinMate API",
+    title="Senhor Finanças API",
     description="AI-Powered Portfolio News Intelligence API",
     version="1.0.0"
 )
@@ -38,7 +38,7 @@ app.include_router(reports.router)
 @app.get("/")
 async def root():
     return {
-        "message": "FinMate API",
+        "message": "Senhor Finanças API",
         "version": "1.0.0",
         "docs": "/docs"
     }

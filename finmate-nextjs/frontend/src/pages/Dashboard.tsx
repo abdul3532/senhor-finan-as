@@ -23,7 +23,7 @@ export default function Dashboard() {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'finmate_briefing.pdf';
+                    a.download = 'senhor_financas_briefing.pdf';
                     a.click();
                 }
             });

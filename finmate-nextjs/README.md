@@ -1,6 +1,6 @@
-# FinMate Next.js Migration
+# Senhor Finanças (formerly FinMate)
 
-This is an **experimental** migration of FinMate from Streamlit to a modern Next.js + TypeScript + Tailwind CSS stack.
+This is an **experimental** migration of Senhor Finanças from Streamlit to a modern Next.js + TypeScript + Tailwind CSS stack.
 
 > **Note:** This is a separate project and does not affect your original Streamlit application in the parent directory.
 
@@ -146,4 +146,4 @@ If you prefer the original:
 
 ## License
 
-Same as original FinMate project.
+Same as original Senhor Finanças project.

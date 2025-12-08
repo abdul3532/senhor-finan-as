@@ -20,12 +20,12 @@ generation_config = {
 }
 
 model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash-lite-preview-02-05",
+    model_name="gemini-2.5-flash",
     generation_config=generation_config,
 )
 
 chat_model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash-lite-preview-02-05",
+    model_name="gemini-2.5-flash",
 )
 
 # @observe()  # Temporarily disabled
@@ -33,6 +33,8 @@ def analyze_news(news_item: Dict, portfolio: List[str]) -> Dict[str, Any]:
     """
     Analyzes a news item against the user's portfolio.
     """
+    logger.info(f"Analyzing news with model: {model.model_name}")
+
     prompt = f"""
     You are a financial analyst. Analyze the following news article and determine its impact on the user's portfolio.
     
@@ -92,7 +94,7 @@ def chat_with_data(query: str, context: str) -> str:
     Chat with the AI using provided context (news + portfolio + documents).
     """
     prompt = f"""
-    You are FinMate, an expert financial assistant.
+    You are Senhor Finanças, an expert financial assistant.
     
     Context (News, Portfolio, Documents):
     {context}

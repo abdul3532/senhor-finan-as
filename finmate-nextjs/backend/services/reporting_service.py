@@ -17,7 +17,7 @@ def generate_briefing(news_data: List[Dict], portfolio: List[str]) -> bytes:
 
     # Title
     title_style = styles['Title']
-    story.append(Paragraph(f"FinMate Daily Briefing - {datetime.date.today()}", title_style))
+    story.append(Paragraph(f"Senhor Finanças Daily Briefing - {datetime.date.today()}", title_style))
     story.append(Spacer(1, 12))
 
     # Portfolio Summary

@@ -19,11 +19,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center justify-between w-full max-w-7xl pointer-events-auto">
                     {/* Logo */}
                     <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
-                            <span className="text-white font-bold text-xl">F</span>
-                        </div>
+                        <img src="/senhor-logo.png" alt="Senhor Finanças" className="w-10 h-10 rounded-xl shadow-lg shadow-green-500/20" />
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 hidden sm:block">
-                            FinMate
+                            Senhor Finanças
                         </span>
                     </div>
 
