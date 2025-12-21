@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import Dashboard from "./pages/Dashboard.tsx";
 import Portfolio from "./pages/Portfolio.tsx";
+import NewsPage from "./pages/News.tsx";
 import Chat from "./pages/Chat.tsx";
 import Layout from "./components/Layout.tsx";
 import "./index.css";
@@ -18,6 +19,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/news" element={<NewsPage />} />
               <Route path="/chat" element={<Chat />} />
             </Routes>
           </Layout>

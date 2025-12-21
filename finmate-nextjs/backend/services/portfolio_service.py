@@ -1,56 +1,71 @@
-import json
-import os
 import logging
 import yfinance as yf
 from typing import List, Dict, Any
+from db.client import supabase
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = "data"
-PORTFOLIO_FILE = os.path.join(DATA_DIR, "portfolio.json")
-PROFILES_FILE = os.path.join(DATA_DIR, "profiles.json")
+# Constants (Kept for fallback logic if needed, but primary is DB)
+DEFAULT_PORTFOLIO_NAME = "My Portfolio"
 
-def ensure_data_dir():
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
+def get_default_portfolio_id() -> str:
+    """Helper to get the ID of the default portfolio"""
+    if not supabase:
+        raise Exception("Database connection failed")
+        
+    res = supabase.table("portfolios").select("id").eq("name", DEFAULT_PORTFOLIO_NAME).execute()
+    if res.data:
+        return res.data[0]['id']
+    
+    # Create if not exists
+    res = supabase.table("portfolios").insert({"name": DEFAULT_PORTFOLIO_NAME}).execute()
+    return res.data[0]['id']
 
 # --- Portfolio Tickers ---
 
 def load_portfolio() -> List[str]:
-    ensure_data_dir()
-    if not os.path.exists(PORTFOLIO_FILE):
+    """Fetch tickers from Supabase"""
+    if not supabase:
+        logger.error("Supabase not available")
         return []
+        
     try:
-        with open(PORTFOLIO_FILE, "r") as f:
-            data = json.load(f)
-            return data.get("tickers", [])
-    except json.JSONDecodeError:
+        pid = get_default_portfolio_id()
+        res = supabase.table("portfolio_items").select("ticker").eq("portfolio_id", pid).execute()
+        return [item['ticker'] for item in res.data]
+    except Exception as e:
+        logger.error(f"Failed to load portfolio: {e}")
         return []
 
 def save_portfolio(tickers: List[str]):
-    ensure_data_dir()
-    with open(PORTFOLIO_FILE, "w") as f:
-        json.dump({"tickers": tickers}, f)
+    """Deprecated: DB updates happen individually via add/remove"""
+    pass 
 
 # --- Company Profiles ---
 
 def load_profiles() -> Dict[str, Any]:
-    ensure_data_dir()
-    if not os.path.exists(PROFILES_FILE):
+    """Fetch all cached profiles from DB"""
+    if not supabase:
         return {}
     try:
-        with open(PROFILES_FILE, "r") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
+        res = supabase.table("company_profiles").select("*").execute()
+        profiles = {}
+        for row in res.data:
+            profiles[row['ticker']] = {
+                "name": row['name'],
+                "sector": row['sector'],
+                "industry": row['industry'],
+                "summary": row['summary'],
+                "website": row['website'],
+                "currency": row['currency']
+            }
+        return profiles
+    except Exception as e:
+        logger.error(f"Failed to load profiles: {e}")
         return {}
 
-def save_profiles(profiles: Dict[str, Any]):
-    ensure_data_dir()
-    with open(PROFILES_FILE, "w") as f:
-        json.dump(profiles, f)
-
 def fetch_company_profile(ticker: str) -> Dict[str, Any]:
-    """Fetch company details using yfinance"""
+    """Fetch company details using yfinance and cache to DB"""
     try:
         logger.info(f"Fetching profile for {ticker}...")
         stock = yf.Ticker(ticker)
@@ -65,6 +80,18 @@ def fetch_company_profile(ticker: str) -> Dict[str, Any]:
             "currency": info.get("currency", "USD"),
             "website": info.get("website", "")
         }
+        
+        # Cache to DB if available
+        if supabase:
+            try:
+                db_row = {
+                    "ticker": ticker,
+                    **profile
+                }
+                supabase.table("company_profiles").upsert(db_row).execute()
+            except Exception as db_e:
+                logger.error(f"Failed to cache profile to DB: {db_e}")
+                
         return profile
     except Exception as e:
         logger.error(f"Failed to fetch profile for {ticker}: {e}")
@@ -79,34 +106,45 @@ def fetch_company_profile(ticker: str) -> Dict[str, Any]:
 
 def add_ticker(ticker: str) -> List[str]:
     ticker = ticker.upper()
-    tickers = load_portfolio()
     
-    if ticker not in tickers:
-        # 1. Add to list
-        tickers.append(ticker)
-        save_portfolio(tickers)
+    if not supabase:
+        logger.error("Database unavailable")
+        return []
+
+    try:
+        pid = get_default_portfolio_id()
         
-        # 2. Fetch and save profile
-        profiles = load_profiles()
-        profile_data = fetch_company_profile(ticker)
-        profiles[ticker] = profile_data
-        save_profiles(profiles)
+        # 1. Add to portfolio_items (Upsert handles duplicates gracefully via ON CONFLICT if configured, 
+        # but here we rely on Supabase returning error or success. 
+        # Better to check existence or just try insert and catch error)
         
-    return tickers
+        # Check if exists first
+        existing = supabase.table("portfolio_items").select("*").eq("portfolio_id", pid).eq("ticker", ticker).execute()
+        if not existing.data:
+            supabase.table("portfolio_items").insert({
+                "portfolio_id": pid, 
+                "ticker": ticker
+            }).execute()
+        
+        # 2. Add/Update Profile
+        fetch_company_profile(ticker)
+        
+    except Exception as e:
+        logger.error(f"Error adding ticker {ticker}: {e}")
+        
+    # Return updated list
+    return load_portfolio()
 
 def remove_ticker(ticker: str) -> List[str]:
     ticker = ticker.upper()
-    tickers = load_portfolio()
     
-    if ticker in tickers:
-        # 1. Remove from list
-        tickers.remove(ticker)
-        save_portfolio(tickers)
+    if not supabase:
+        return []
         
-        # 2. Remove profile (optional, but keeps clean)
-        profiles = load_profiles()
-        if ticker in profiles:
-            del profiles[ticker]
-            save_profiles(profiles)
-            
-    return tickers
+    try:
+        pid = get_default_portfolio_id()
+        supabase.table("portfolio_items").delete().eq("portfolio_id", pid).eq("ticker", ticker).execute()
+    except Exception as e:
+        logger.error(f"Error removing ticker {ticker}: {e}")
+        
+    return load_portfolio()

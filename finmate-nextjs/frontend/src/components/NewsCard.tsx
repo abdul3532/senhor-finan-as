@@ -81,10 +81,10 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
                                     className="hover:text-primary hover:underline transition-colors"
                                     onClick={(e) => e.stopPropagation()} // Prevent card click
                                 >
-                                    Source
+                                    {item.source}
                                 </a>
                             ) : (
-                                <span>Source</span>
+                                <span>{item.source}</span>
                             )}
                             <span className="mx-2">•</span>
                             <span className="flex items-center gap-1">

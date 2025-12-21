@@ -109,6 +109,30 @@ export const useUploadDocument = () => {
     });
 };
 
+export const useChatHistory = () => {
+    return useQuery({
+        queryKey: ['chatHistory'],
+        queryFn: async (): Promise<any[]> => {
+            const res = await fetch(`${API_BASE}/api/chat/history`);
+            if (!res.ok) throw new Error('Failed to fetch history');
+            return res.json();
+        }
+    });
+};
+
+export const useChatMessages = (conversationId: string | null) => {
+    return useQuery({
+        queryKey: ['chatMessages', conversationId],
+        queryFn: async (): Promise<ChatMessage[]> => {
+            if (!conversationId) return [];
+            const res = await fetch(`${API_BASE}/api/chat/${conversationId}/messages`);
+            if (!res.ok) throw new Error('Failed to fetch messages');
+            return res.json();
+        },
+        enabled: !!conversationId
+    });
+};
+
 // Reports API
 export const useGenerateReport = () => {
     return useMutation({

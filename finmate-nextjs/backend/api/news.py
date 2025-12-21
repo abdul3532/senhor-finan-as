@@ -1,65 +1,74 @@
-from fastapi import APIRouter, HTTPException
-from typing import List
+from fastapi import APIRouter, HTTPException, Query
+from typing import List, Optional
 from models import NewsItem
 from services import news_service, llm_service, portfolio_service
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/news", tags=["news"])
 
-# In-memory cache for analyzed news
-_news_cache: List[NewsItem] = []
-
 @router.get("", response_model=List[NewsItem])
 async def get_news():
-    """Get cached analyzed news"""
-    return _news_cache
+    """Get persisted news from database"""
+    try:
+        return news_service.get_latest_news()
+    except Exception as e:
+        logger.error(f"Error fetching news: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch news: {str(e)}")
 
 @router.post("/refresh", response_model=List[NewsItem])
 async def refresh_news():
-    """Fetch fresh news and analyze against portfolio"""
-    global _news_cache
-    
+    """Fetch fresh news, analyze, and save to DB"""
     try:
-        # Get portfolio
+        # Get portfolio for analysis context
         portfolio = portfolio_service.load_portfolio()
         
-        # Fetch raw news
+        # Fetch raw news (DuckDuckGo)
         raw_news = news_service.fetch_news()
         
-        # Analyze each news item
         analyzed_news = []
         for item in raw_news:
+            # Analyze with LLM
             analysis = llm_service.analyze_news(item, portfolio)
             
-            # Combine raw news with analysis
+            # Create NewsItem model
             news_item = NewsItem(
-                id=str(uuid.uuid4()),
+                id=str(uuid.uuid4()), # Temporary ID, DB assigns real one but we need one for model
                 headline=analysis.get('headline', item['title']),
                 summary=analysis.get('summary', item['summary']),
                 sentiment_score=analysis.get('sentiment_score', 50),
-                category=analysis.get('category', 'Unknown'),
+                category=analysis.get('category', 'General'),
                 affected_tickers=analysis.get('affected_tickers', []),
                 impact=analysis.get('impact', 'neutral'),
                 impact_reason=analysis.get('impact_reason', ''),
-                risk_level=analysis.get('risk_level', 'low'),
+                risk_level=analysis.get('risk_level', 'medium'),
                 link=item['link'],
                 published=item.get('published'),
+                source=item.get('source', 'Unknown'),
                 related_sources=analysis.get('related_sources', [])
             )
+            
+            # Save to Database (Upsert)
+            news_service.save_analyzed_news(news_item)
+            
             analyzed_news.append(news_item)
         
-        # Update cache
-        _news_cache = analyzed_news
-        
+        # Return what was just processed
         return analyzed_news
     
     except Exception as e:
+        logger.error(f"Error refreshing news: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to refresh news: {str(e)}")
 
 @router.get("/{news_id}", response_model=NewsItem)
 async def get_news_item(news_id: str):
     """Get a specific news item by ID"""
-    for item in _news_cache:
+    # Just fetch list and filter for now as we don't have get_by_id in service yet
+    # Optimization: Add get_by_id to service later
+    news = news_service.get_latest_news()
+    for item in news:
         if item.id == news_id:
             return item
     raise HTTPException(status_code=404, detail="News item not found")

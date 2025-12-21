@@ -25,7 +25,14 @@ export interface NewsItem {
     risk_level: "low" | "medium" | "high";
     link: string;
     published?: string;
+    source?: string;
     related_sources?: string[];
+}
+
+export interface Conversation {
+    id: string;
+    title: string;
+    updated_at: string;
 }
 
 export interface ChatMessage {

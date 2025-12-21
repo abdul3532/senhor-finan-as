@@ -29,14 +29,19 @@ class NewsItem(BaseModel):
     risk_level: str  # "low" | "medium" | "high"
     link: str
     published: Optional[str] = None
+    source: Optional[str] = "Unknown"
     related_sources: List[str] = []
 
 class ChatMessage(BaseModel):
+    id: Optional[str] = None
+    conversation_id: Optional[str] = None
     role: str  # "user" | "assistant"
     content: str
+    created_at: Optional[str] = None
 
 class ChatRequest(BaseModel):
     query: str
+    conversation_id: Optional[str] = None
     portfolio: Optional[List[str]] = None
     news_context: Optional[List[NewsItem]] = None
     document_context: Optional[str] = None
