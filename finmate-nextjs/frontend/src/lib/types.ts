@@ -1,6 +1,16 @@
 // API Types
+export interface CompanyProfile {
+    name: string;
+    sector?: string;
+    industry?: string;
+    summary?: string;
+    currency?: string;
+    website?: string;
+}
+
 export interface Portfolio {
     tickers: string[];
+    profiles?: Record<string, CompanyProfile>;
 }
 
 export interface NewsItem {
@@ -15,6 +25,7 @@ export interface NewsItem {
     risk_level: "low" | "medium" | "high";
     link: string;
     published?: string;
+    related_sources?: string[];
 }
 
 export interface ChatMessage {

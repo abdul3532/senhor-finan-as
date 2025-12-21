@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import logging
-from api import portfolio, news, chat, reports
 
 # Load environment variables
 load_dotenv()
+
+from api import portfolio, news, chat, reports
 
 # Setup logging
 logging.basicConfig(

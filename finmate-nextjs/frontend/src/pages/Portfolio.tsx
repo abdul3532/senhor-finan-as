@@ -7,8 +7,11 @@ import { usePortfolio, useAddTicker, useRemoveTicker } from "@/lib/api";
 import { Plus, Trash2, Wallet, TrendingUp, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { CompanyDetailModal } from "@/components/CompanyDetailModal";
+
 export default function Portfolio() {
     const [newTicker, setNewTicker] = useState("");
+    const [selectedCompanyTicker, setSelectedCompanyTicker] = useState<string | null>(null);
     const { data: portfolio, isLoading } = usePortfolio();
     const addTicker = useAddTicker();
     const removeTicker = useRemoveTicker();
@@ -27,6 +30,22 @@ export default function Portfolio() {
 
     // Mock data for company names/icons
     const getCompanyDetails = (ticker: string) => {
+        // 1. Try backend profile
+        if (portfolio?.profiles && portfolio.profiles[ticker]) {
+            const profile = portfolio.profiles[ticker];
+            let icon = "🏢";
+            if (profile.sector) {
+                if (profile.sector.includes("Technology")) icon = "💻";
+                else if (profile.sector.includes("Communication")) icon = "📱";
+                else if (profile.sector.includes("Consumer")) icon = "🛍️";
+                else if (profile.sector.includes("Financial")) icon = "💸";
+                else if (profile.sector.includes("Energy")) icon = "⚡";
+                else if (profile.sector.includes("Health")) icon = "🏥";
+                else if (profile.sector.includes("Auto")) icon = "🚗";
+            }
+            return { name: profile.name, icon };
+        }
+
         const details: Record<string, { name: string, icon: string }> = {
             "AAPL": { name: "Apple Inc.", icon: "🍎" },
             "MSFT": { name: "Microsoft Corp.", icon: "🪟" },
@@ -132,7 +151,8 @@ export default function Portfolio() {
                                     return (
                                         <div
                                             key={ticker}
-                                            className="group flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:border-white/10 hover:translate-x-1"
+                                            onClick={() => setSelectedCompanyTicker(ticker)}
+                                            className="group flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:border-white/10 hover:translate-x-1 cursor-pointer"
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center text-2xl border border-white/10">
@@ -174,6 +194,13 @@ export default function Portfolio() {
                     </Card>
                 </div>
             </div>
+
+            <CompanyDetailModal
+                isOpen={!!selectedCompanyTicker}
+                onClose={() => setSelectedCompanyTicker(null)}
+                ticker={selectedCompanyTicker}
+                profile={selectedCompanyTicker && portfolio?.profiles ? portfolio.profiles[selectedCompanyTicker] : null}
+            />
         </div>
     );
 }

@@ -1,9 +1,18 @@
 # Backend Models
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
+
+class CompanyProfile(BaseModel):
+    name: str
+    sector: Optional[str] = None
+    industry: Optional[str] = None
+    summary: Optional[str] = None
+    currency: Optional[str] = None
+    website: Optional[str] = None
 
 class Portfolio(BaseModel):
     tickers: List[str]
+    profiles: Optional[Dict[str, CompanyProfile]] = {}
 
 class AddTickerRequest(BaseModel):
     ticker: str
@@ -20,6 +29,7 @@ class NewsItem(BaseModel):
     risk_level: str  # "low" | "medium" | "high"
     link: str
     published: Optional[str] = None
+    related_sources: List[str] = []
 
 class ChatMessage(BaseModel):
     role: str  # "user" | "assistant"

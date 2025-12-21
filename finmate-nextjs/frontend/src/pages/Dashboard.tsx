@@ -1,16 +1,23 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNews, useRefreshNews, usePortfolio, useGenerateReport } from "@/lib/api";
-import { RefreshCw, Download, TrendingUp, TrendingDown, ArrowRight, ExternalLink, Clock } from "lucide-react";
+import { RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react";
 import type { NewsItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { NewsCard } from "@/components/NewsCard";
+import { NewsDetailModal } from "@/components/NewsDetailModal";
+import { CompanyDetailModal } from "@/components/CompanyDetailModal";
 
 export default function Dashboard() {
     const { data: portfolio } = usePortfolio();
     const { data: news, isLoading: newsLoading } = useNews();
     const refreshNews = useRefreshNews();
     const generateReport = useGenerateReport();
+    const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+    const [selectedCompanyTicker, setSelectedCompanyTicker] = useState<string | null>(null);
 
     const handleRefreshNews = () => {
         refreshNews.mutate();
@@ -30,21 +37,25 @@ export default function Dashboard() {
         }
     };
 
-    const getImpactColor = (impact: string) => {
-        if (impact === "positive") return "text-green-400";
-        if (impact === "negative") return "text-red-400";
-        return "text-blue-400";
-    };
-
-    const getImpactBg = (impact: string) => {
-        if (impact === "positive") return "bg-green-500/10 border-green-500/20";
-        if (impact === "negative") return "bg-red-500/10 border-red-500/20";
-        return "bg-blue-500/10 border-blue-500/20";
-    };
-
     // Mock data for portfolio cards to match the visual style if real data is missing details
     // In a real app, we'd fetch this detailed info
     const getCompanyDetails = (ticker: string) => {
+        // 1. Try backend profile
+        if (portfolio?.profiles && portfolio.profiles[ticker]) {
+            const profile = portfolio.profiles[ticker];
+            let icon = "🏢";
+            if (profile.sector) {
+                if (profile.sector.includes("Technology")) icon = "💻";
+                else if (profile.sector.includes("Communication")) icon = "📱";
+                else if (profile.sector.includes("Consumer")) icon = "🛍️";
+                else if (profile.sector.includes("Financial")) icon = "💸";
+                else if (profile.sector.includes("Energy")) icon = "⚡";
+                else if (profile.sector.includes("Health")) icon = "🏥";
+                else if (profile.sector.includes("Auto")) icon = "🚗";
+            }
+            return { name: profile.name, icon };
+        }
+
         const details: Record<string, { name: string, icon: string }> = {
             "AAPL": { name: "Apple Inc.", icon: "🍎" },
             "MSFT": { name: "Microsoft Corp.", icon: "🪟" },
@@ -63,7 +74,7 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-bold tracking-tight mb-2">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">
                             Dashboard
                         </span>
                     </h1>
@@ -76,7 +87,7 @@ export default function Dashboard() {
                         onClick={handleRefreshNews}
                         disabled={refreshNews.isPending}
                         variant="outline"
-                        className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                        className="bg-secondary/50 border-secondary hover:bg-secondary text-foreground"
                     >
                         <RefreshCw className={cn("h-4 w-4 mr-2", refreshNews.isPending && "animate-spin")} />
                         Refresh
@@ -84,7 +95,7 @@ export default function Dashboard() {
                     <Button
                         onClick={handleGenerateReport}
                         disabled={!news || news.length === 0 || generateReport.isPending}
-                        className="bg-primary hover:bg-primary/90 text-white border-0 shadow-lg shadow-primary/20"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-lg shadow-primary/20"
                     >
                         <Download className="h-4 w-4 mr-2" />
                         Briefing PDF
@@ -95,7 +106,7 @@ export default function Dashboard() {
             {/* Portfolio Impact Section */}
             <section className="space-y-6 animate-slide-in">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-semibold text-white">Portfolio - Today's Impact Previsions</h2>
+                    <h2 className="text-2xl font-semibold text-foreground">Portfolio - Today's Impact Previsions</h2>
                 </div>
 
                 {portfolio && portfolio.tickers.length > 0 ? (
@@ -115,20 +126,27 @@ export default function Dashboard() {
                             return (
                                 <div
                                     key={ticker}
+                                    onClick={() => setSelectedCompanyTicker(ticker)}
                                     className={cn(
-                                        "relative overflow-hidden rounded-2xl p-5 border transition-all duration-300 hover:scale-[1.02] cursor-pointer group",
+                                        "relative overflow-hidden rounded-2xl p-5 border transition-all duration-300 hover:scale-[1.02] cursor-pointer group bg-card hover:shadow-lg",
                                         isPositive
-                                            ? "bg-gradient-to-br from-green-950/30 to-black border-green-500/20 hover:border-green-500/40"
-                                            : "bg-gradient-to-br from-red-950/30 to-black border-red-500/20 hover:border-red-500/40"
+                                            ? "dark:bg-gradient-to-br dark:from-green-950/30 dark:to-black border-green-500/20 hover:border-green-500/40"
+                                            : "dark:bg-gradient-to-br dark:from-red-950/30 dark:to-black border-red-500/20 hover:border-red-500/40"
                                     )}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
+                                    {/* Light mode alternate background */}
+                                    <div className={cn("absolute inset-0 opacity-0 dark:opacity-0 transition-opacity",
+                                        isPositive ? "bg-green-50/50" : "bg-red-50/50",
+                                        "group-hover:opacity-100 dark:group-hover:opacity-0"
+                                    )} />
+
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl backdrop-blur-sm">
+                                            <div className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center text-xl backdrop-blur-sm">
                                                 {details.icon}
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-white text-lg leading-none">{ticker}</h3>
+                                                <h3 className="font-bold text-foreground text-lg leading-none">{ticker}</h3>
                                                 <p className="text-xs text-muted-foreground mt-1">{details.name}</p>
                                             </div>
                                         </div>
@@ -139,8 +157,8 @@ export default function Dashboard() {
                                         )}
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-2">
-                                        <Badge variant="outline" className="bg-black/20 border-white/10 text-xs font-normal">
+                                    <div className="flex items-center justify-between mt-2 relative z-10">
+                                        <Badge variant="outline" className="bg-background/50 border-border text-xs font-normal">
                                             {tickerNews.length} news items
                                         </Badge>
 
@@ -163,15 +181,15 @@ export default function Dashboard() {
                         })}
 
                         {/* Add New Ticker Card */}
-                        <div className="rounded-2xl p-5 border border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center text-center hover:bg-white/10 transition-colors cursor-pointer min-h-[140px]">
-                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2">
+                        <Link to="/portfolio" className="rounded-2xl p-5 border border-dashed border-border bg-card/50 flex flex-col items-center justify-center text-center hover:bg-card transition-colors cursor-pointer min-h-[140px]">
+                            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center mb-2">
                                 <span className="text-xl">+</span>
                             </div>
                             <p className="text-sm font-medium text-muted-foreground">Add Asset</p>
-                        </div>
+                        </Link>
                     </div>
                 ) : (
-                    <Card className="bg-white/5 border-white/10 p-8 text-center">
+                    <Card className="bg-card border-border p-8 text-center">
                         <p className="text-muted-foreground mb-4">No assets in your portfolio yet.</p>
                         <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
                             Add Your First Asset
@@ -182,7 +200,7 @@ export default function Dashboard() {
 
             {/* News Feed Section */}
             <section className="space-y-6">
-                <h2 className="text-2xl font-semibold text-white">Today's Important Financial News</h2>
+                <h2 className="text-2xl font-semibold text-foreground">Today's Important Financial News</h2>
 
                 {newsLoading && (
                     <div className="flex flex-col items-center justify-center py-20">
@@ -193,101 +211,27 @@ export default function Dashboard() {
 
                 <div className="grid gap-4">
                     {news?.map((item: NewsItem, index) => (
-                        <div
+                        <NewsCard
                             key={item.id || index}
-                            className="group relative overflow-hidden rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:border-white/20"
-                        >
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                            <div className="p-6 flex flex-col md:flex-row gap-6">
-                                {/* Left Content */}
-                                <div className="flex-1 space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn("w-2 h-2 rounded-full",
-                                            item.impact === 'positive' ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" :
-                                                item.impact === 'negative' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" :
-                                                    "bg-blue-500"
-                                        )} />
-                                        <h3 className="text-xl font-semibold text-white group-hover:text-primary transition-colors">
-                                            {item.headline}
-                                        </h3>
-                                    </div>
-
-                                    <p className="text-muted-foreground leading-relaxed">
-                                        {item.summary}
-                                    </p>
-
-                                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                                        <Badge variant="outline" className="bg-white/5 border-white/10 text-zinc-400 font-normal">
-                                            {item.category}
-                                        </Badge>
-                                        <div className="flex items-center gap-1 text-xs text-zinc-500">
-                                            <Clock className="w-3 h-3" />
-                                            <span>{new Date().toLocaleTimeString()}</span>
-                                        </div>
-                                        {item.link && (
-                                            <a
-                                                href={item.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-1 text-xs text-primary hover:underline ml-auto"
-                                            >
-                                                Read Source <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Right Stats Panel */}
-                                <div className="md:w-64 flex flex-col justify-center gap-4 pl-6 md:border-l border-white/5">
-                                    {/* Sentiment Meter */}
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-xs text-zinc-400">
-                                            <span>Critical</span>
-                                            <span>Great News</span>
-                                        </div>
-                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden relative">
-                                            <div
-                                                className={cn("absolute top-0 bottom-0 w-full transition-all duration-1000",
-                                                    item.sentiment_score > 50 ? "bg-gradient-to-r from-transparent to-green-500" : "bg-gradient-to-r from-red-500 to-transparent"
-                                                )}
-                                                style={{
-                                                    left: `${item.sentiment_score > 50 ? 0 : item.sentiment_score - 100}%`,
-                                                    opacity: 0.5
-                                                }}
-                                            />
-                                            <div
-                                                className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white]"
-                                                style={{ left: `${item.sentiment_score}%` }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Impact Tags */}
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex -space-x-2">
-                                            {item.affected_tickers.slice(0, 3).map((ticker, i) => (
-                                                <div key={i} className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] font-bold text-white z-10">
-                                                    {ticker.substring(0, 1)}
-                                                </div>
-                                            ))}
-                                            {item.affected_tickers.length > 3 && (
-                                                <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] font-bold text-white z-0">
-                                                    +{item.affected_tickers.length - 3}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <Badge className={cn("ml-auto font-mono", getImpactBg(item.impact), getImpactColor(item.impact))}>
-                                            {item.impact === 'positive' ? '+1' : item.impact === 'negative' ? '-1' : '0'}
-                                        </Badge>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            item={item}
+                            onClick={() => setSelectedNews(item)}
+                        />
                     ))}
                 </div>
             </section>
+
+            <NewsDetailModal
+                isOpen={!!selectedNews}
+                onClose={() => setSelectedNews(null)}
+                newsItem={selectedNews}
+            />
+
+            <CompanyDetailModal
+                isOpen={!!selectedCompanyTicker}
+                onClose={() => setSelectedCompanyTicker(null)}
+                ticker={selectedCompanyTicker}
+                profile={selectedCompanyTicker && portfolio?.profiles ? portfolio.profiles[selectedCompanyTicker] : null}
+            />
         </div>
     );
 }

@@ -1,39 +1,25 @@
+
 import os
 import json
-import google.generativeai as genai
-# from langfuse.decorators import observe  # Temporarily disabled
-from typing import List, Dict, Any
 import logging
+from typing import List, Dict, Any
+from openai import OpenAI
+# Removed native tool import as we are using OpenAI Builtin or Fallback
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+# Configure OpenAI
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-# Generation Config for JSON output
-generation_config = {
-    "temperature": 0.2,
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192,
-    "response_mime_type": "application/json",
-}
+MODEL_NAME = "gpt-4o" 
 
-model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
-    generation_config=generation_config,
-)
-
-chat_model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
-)
-
-# @observe()  # Temporarily disabled
 def analyze_news(news_item: Dict, portfolio: List[str]) -> Dict[str, Any]:
     """
-    Analyzes a news item against the user's portfolio.
+    Analyzes a news item against the user's portfolio using OpenAI.
+    Attempts to use the native 'web_search' tool via client.responses.
+    Falls back to standard chat completion if unavailable.
     """
-    logger.info(f"Analyzing news with model: {model.model_name}")
+    logger.info(f"Analyzing news with model: {MODEL_NAME}")
 
     prompt = f"""
     You are a financial analyst. Analyze the following news article and determine its impact on the user's portfolio.
@@ -45,53 +31,80 @@ def analyze_news(news_item: Dict, portfolio: List[str]) -> Dict[str, Any]:
     News Link: {news_item.get('link')}
     
     CRITICAL INSTRUCTION:
-    - You must infer if the news affects a company in the portfolio even if the ticker is not explicitly mentioned (e.g., "Apple" -> "AAPL", "Google" -> "GOOGL").
+    - You must infer if the news affects a company in the portfolio even if the ticker is not explicitly mentioned.
     - If the news is about a competitor or the sector, it may also be relevant.
     
     Return a JSON object with the following schema:
     {{
         "headline": "Short, punchy headline",
         "summary": "Concise summary of the event",
-        "sentiment_score": 0-100 (integer, 0=very negative, 100=very positive),
+        "sentiment_score": 0-10 (integer, 0=catastrophic, 5=neutral, 10=euphoric),
         "category": "Markets | Macro | Equities | Energy | Tech",
         "affected_tickers": ["TICKER1", "TICKER2"],
         "impact": "positive | neutral | negative",
         "impact_reason": "Explanation of why it impacts the portfolio or specific tickers",
-        "risk_level": "low | medium | high"
+        "risk_level": "low | medium | high",
+        "related_sources": ["url1", "url2"]
     }}
     
-    If no specific tickers from the portfolio are affected, but it's a general market event, note that.
+    CRITICAL SCORING INSTRUCTION:
+    - BE CRITICAL. Use full 0-10 range.
     """
-    
+
+    # 1. Try Native Responses API (Web Search)
     try:
-        response = model.generate_content(prompt)
-        return json.loads(response.text)
+        # Check if attribute exists dynamically to avoid runtime crash on older SDKs
+        if hasattr(client, 'responses'):
+            logger.info("Attempting OpenAI Built-in Web Search...")
+            response = client.responses.create(
+                model=MODEL_NAME,
+                input=[
+                    {"role": "system", "content": "You are a helpful financial analyst. Use web_search to verify news."},
+                    {"role": "user", "content": prompt}
+                ],
+                tools=[{"type": "web_search"}],
+                response_format={"type": "json_object"},
+                temperature=0.2
+            )
+            # The Responses API returns .output_text instead of choices
+            return json.loads(response.output_text)
+
+    except Exception as e:
+        logger.warning(f"Native Web Search failed or unavailable: {e}. Falling back to standard model.")
+    
+    # 2. Fallback: Standard Chat Completion (No Web Search)
+    try:
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": "You are a helpful financial analyst. You always respond in valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2
+        )
+        content = response.choices[0].message.content
+        return json.loads(content)
+        
     except Exception as e:
         logger.error(f"LLM Analysis failed: {e}")
-        
-        # Fallback: Simple keyword matching
+        # Fallback to keyword matching
         found_tickers = []
         text_content = (news_item.get('title', '') + " " + news_item.get('summary', '')).upper()
-        
         for ticker in portfolio:
-            if ticker.upper() in text_content:
-                found_tickers.append(ticker)
+            if ticker.upper() in text_content: found_tickers.append(ticker)
         
         return {
             "headline": news_item.get('title'),
-            "summary": f"AI Analysis Unavailable (Rate Limit). Content: {news_item.get('summary')[:100]}...",
-            "sentiment_score": 50,
-            "category": "General",
-            "affected_tickers": found_tickers,
-            "impact": "neutral",
-            "impact_reason": "AI rate limit exceeded - basic keyword match only.",
-            "risk_level": "low"
+            "summary": f"AI Analysis Unavailable. Content: {news_item.get('summary')[:100]}...",
+            "sentiment_score": 5, "category": "General", "affected_tickers": found_tickers,
+            "impact": "neutral", "impact_reason": "AI analysis failed.", "risk_level": "low", "related_sources": []
         }
 
-# @observe()  # Temporarily disabled
 def chat_with_data(query: str, context: str) -> str:
     """
     Chat with the AI using provided context (news + portfolio + documents).
+    Attempts to use Native Search if requested.
     """
     prompt = f"""
     You are Senhor Finanças, an expert financial assistant.
@@ -102,15 +115,41 @@ def chat_with_data(query: str, context: str) -> str:
     User Query: {query}
     
     Instructions:
-    - Answer the user's question based strictly on the context provided.
-    - If the context contains news or document analysis, cite it.
+    - Answer the user's question based on context.
+    - If the user asks for current info not in context (e.g. stock price, latest news), USE THE web_search TOOL.
     - Be concise, professional, and helpful.
-    - If the answer is not in the context, say so, but offer general financial knowledge if appropriate (with a disclaimer).
     """
     
+    # 1. Try Native Responses API (Web Search)
     try:
-        response = chat_model.generate_content(prompt)
-        return response.text
+        if hasattr(client, 'responses'):
+            response = client.responses.create(
+                model=MODEL_NAME,
+                input=[
+                    {"role": "system", "content": "You are a helpful financial assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                tools=[{"type": "web_search"}],
+                temperature=0.5
+            )
+            return response.output_text
+
+    except Exception as e:
+        logger.warning(f"Chat Native Web Search failed: {e}")
+
+    # 2. Fallback to Standard Chat
+    try:
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": "You are a helpful financial assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5
+        )
+        return response.choices[0].message.content
+        
     except Exception as e:
         logger.error(f"Chat failed: {e}")
-        return f"I encountered an error while communicating with the AI service. \n\nError details: {str(e)}\n\nThis is likely due to the Gemini API free tier rate limits. Please wait a minute and try again."
+        return f"I encountered an error while communicating with the AI service. \n\nError details: {str(e)}"
+

@@ -43,7 +43,8 @@ async def refresh_news():
                 impact_reason=analysis.get('impact_reason', ''),
                 risk_level=analysis.get('risk_level', 'low'),
                 link=item['link'],
-                published=item.get('published')
+                published=item.get('published'),
+                related_sources=analysis.get('related_sources', [])
             )
             analyzed_news.append(news_item)
         

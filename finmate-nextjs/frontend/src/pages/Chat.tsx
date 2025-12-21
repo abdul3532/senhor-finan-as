@@ -157,7 +157,7 @@ export default function Chat() {
                     {/* Header */}
                     <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
                         <div className="flex items-center gap-3">
-                            <img src="/senhor-logo.png" alt="AI" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/20" />
+                            <img src="/logo.png" alt="AI" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/20" />
                             <div>
                                 <h2 className="font-semibold text-white">Senhor Finanças AI</h2>
                                 <p className="text-xs text-green-400 flex items-center gap-1">

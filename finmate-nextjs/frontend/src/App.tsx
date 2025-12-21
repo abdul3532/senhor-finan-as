@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
 import Dashboard from "./pages/Dashboard.tsx";
 import Portfolio from "./pages/Portfolio.tsx";
 import Chat from "./pages/Chat.tsx";
@@ -11,15 +12,17 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/chat" element={<Chat />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/chat" element={<Chat />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
