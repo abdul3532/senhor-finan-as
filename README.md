@@ -1,77 +1,99 @@
-# Senhor Finanças (FinMate)
+# 🤖 Senhor Finanças (FinMate)
 
-Welcome to **Senhor Finanças**! This is a modern financial intelligence application built with a **React (Vite)** frontend and a **FastAPI** backend.
+![Status](https://img.shields.io/badge/Status-MVP_Complete-green)
+![Stack](https://img.shields.io/badge/Stack-FastAPI%20%7C%20React%20%7C%20Supabase-blue)
+![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4o-purple)
+
+**Senhor Finanças** is an AI-powered financial intelligence platform designed to democratize professional-grade portfolio analysis. By combining real-time market news, personalized portfolio context, and Large Language Model (LLM) reasoning, it transforms raw data into actionable insights for retail investors.
+
+## 🌐 Live Demo
+
+- **Frontend**: [https://senhor-financas.vercel.app](https://senhor-financas.vercel.app) *(deploying)*
+- **Backend API**: [https://senhor-finan-as-o2yt.onrender.com](https://senhor-finan-as-o2yt.onrender.com)
+- **API Docs**: [https://senhor-finan-as-o2yt.onrender.com/docs](https://senhor-finan-as-o2yt.onrender.com/docs)
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Key Features
 
-To run the full application, you will need two terminal windows: one for the backend and one for the frontend.
+*   **📊 Smart Dashboard**: visualizes your portfolio's performance and "Impact Previsions" (how today's news affects *your* assets).
+*   **📰 AI News Analyst**: Automatically fetches, filters, and analyzes financial news. Assigns sentiment scores and risk levels specifically tailored to your holdinngs.
+*   **💬 Financial Assistant**: A conversational agent akin to a robust financial advisor. It can browse the web, check live stock prices, and analyze document uploads (PDFs) to answer complex investment queries.
+*   **🔒 Enterprise-Grade Security**: Fully secured with Supabase Authentication (JWT) and Row Level Security (RLS) policies ensuring data privacy.
+*   **👁️ Observability**: Integrated with **Langfuse** for full transparency into AI reasoning, latency, and costs.
+
+---
+
+## 🛠️ Technology Stack
+
+*   **Frontend**: React, Vite, TailwindCSS, shadcn/ui
+*   **Backend**: Python, FastAPI, Pydantic
+*   **Database**: PostgreSQL (Supabase)
+*   **AI Engine**: OpenAI GPT-4o
+*   **Tools**: DuckDuckGo Search, Yahoo Finance (yfinance), PyPDF2
+
+📄 **[Read the Architecture Documentation](docs/ARCHITECTURE.md)** for a deep dive into technical decisions.
+
+---
+
+## 📦 Getting Started
 
 ### Prerequisites
-- **Python** (3.10 or higher)
-- **Node.js** (v18 or higher)
-- **Git**
+*   Node.js v18+
+*   Python 3.10+
+*   Supabase Account
 
-### 1. Backend Setup (Terminal 1)
+### 1. Backend Setup
 
-Navigate to the backend directory and set up the Python environment.
-
-```powershell
-# Go to backend folder
+```bash
 cd finmate-nextjs/backend
-
-# Create virtual environment
 python -m venv venv
+# Activate venv (Windows: .\venv\Scripts\Activate.ps1 | Mac/Linux: source venv/bin/activate)
 
-# Activate virtual environment
-# Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# Mac/Linux:
-# source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Create .env file (if not exists) and add your keys
-# Copy the example or create new one based on requirements
-# required: GEMINI_API_KEY, etc.
 ```
 
-**Run the Backend Server:**
-```powershell
+Create a `.env` file in `backend/` with your keys:
+```env
+OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=ey... (Service Role Key)
+LANGFUSE_SECRET_KEY=...
+LANGFUSE_PUBLIC_KEY=...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+Run the server:
+```bash
 uvicorn main:app --reload --port 8000
 ```
-> The API will be available at `http://localhost:8000`. API Docs at `http://localhost:8000/docs`.
 
----
+### 2. Frontend Setup
 
-### 2. Frontend Setup (Terminal 2)
-
-Navigate to the frontend directory and start the UI.
-
-```powershell
-# Go to frontend folder
+```bash
 cd finmate-nextjs/frontend
-
-# Install dependencies
 npm install
-
-# Start Development Server
 npm run dev
 ```
-> The App will be available at `http://localhost:5173`.
+Open [http://localhost:5173](http://localhost:5173) to view the app.
 
 ---
 
-## 🔑 Environment Variables
+## ☁️ Deployment
 
-The application requires the following environment variables. Create a `.env` file in `finmate-nextjs/backend/.env`.
+*   **Frontend**: Recommended deployment on **Vercel** or **Netlify**.
+*   **Backend**: Recommended deployment on **Render** or **Railway**.
+*   **Database**: Managed by **Supabase**.
 
-**Required:**
-- `OPENAI_API_KEY`: API Key for OpenAI (GPT-4o is used by default).
-- `SUPABASE_URL`: Your Supabase Project URL.
-- `SUPABASE_KEY`: Your Supabase Anon/Service Role Key.
+See `docs/ARCHITECTURE.md` for environmental configuration details.
 
-**Optional (Frontend):**
-- `VITE_API_URL`: Backend URL (Default: `http://localhost:8000`). Create this in `finmate-nextjs/frontend/.env` if needed.
+---
+
+## 👥 Team
+**NOVA IMS Capstone Project 2025/2026**
+*   Abdul Rehman
+*   Yan Sidoryk
+*   Henry Lewis
+
+---
+*Disclaimer: This application provides financial information, not professional financial advice.*
