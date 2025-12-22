@@ -12,7 +12,10 @@ import { NewsDetailModal } from "@/components/NewsDetailModal";
 import { CompanyDetailModal } from "@/components/CompanyDetailModal";
 import { DashboardTickerCard } from "@/components/DashboardTickerCard";
 
+import { useTour } from "@/hooks/useTour";
+
 export default function Dashboard() {
+    useTour();
     const { data: portfolio } = usePortfolio();
     const { data: news, isLoading: newsLoading } = useNews();
     const refreshNews = useRefreshNews();
