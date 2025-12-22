@@ -1,99 +1,120 @@
-# 🤖 Senhor Finanças (FinMate)
+# Senhor Finanças 🎩
 
-![Status](https://img.shields.io/badge/Status-MVP_Complete-green)
-![Stack](https://img.shields.io/badge/Stack-FastAPI%20%7C%20React%20%7C%20Supabase-blue)
-![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4o-purple)
+**Advanced AI-Powered Financial Intelligence Platform**
 
-**Senhor Finanças** is an AI-powered financial intelligence platform designed to democratize professional-grade portfolio analysis. By combining real-time market news, personalized portfolio context, and Large Language Model (LLM) reasoning, it transforms raw data into actionable insights for retail investors.
+> *Capstone Project 2025/2026 - NOVA IMS Bachelor’s Degree in Data Science*
+
+## 📖 Project Overview
+**Senhor Finanças** is an autonomous financial assistant designed to democratize professional-grade market intelligence. Unlike traditional portfolio trackers, it leverages **Agentic AI** to actively analyze news, verify facts across the web, and provide actionable insights for your specific portfolio holdings.
+
+Users can interact with their financial data through natural language, generate professional PDF briefings, and receive real-time sentiment analysis on breaking news.
+
+### Key Value Proposition
+*   **Context-Aware AI:** The assistant knows your portfolio and tailors answers accordingly.
+*   **Proactive Intelligence:** Autonomously scans news and flags impacts (Positive/Negative/Neutral).
+*   **Trust & Verification:** Every AI claim is cross-referenced with live web search results.
+*   **Professional Reporting:** One-click generation of executive-level PDF briefings.
 
 ## 🌐 Live Demo
+*   **Frontend**: [https://senhor-financas-v0.vercel.app](https://senhor-financas-v0.vercel.app)
+*   **Backend API**: [https://senhor-finan-as-o2yt.onrender.com](https://senhor-finan-as-o2yt.onrender.com)
+*   **API Docs**: [https://senhor-finan-as-o2yt.onrender.com/docs](https://senhor-finan-as-o2yt.onrender.com/docs)
 
-- **Frontend**: [https://senhor-financas-v0.vercel.app](https://senhor-financas-v0.vercel.app)
-- **Backend API**: [https://senhor-finan-as-o2yt.onrender.com](https://senhor-finan-as-o2yt.onrender.com)
-- **API Docs**: [https://senhor-finan-as-o2yt.onrender.com/docs](https://senhor-finan-as-o2yt.onrender.com/docs)
+---
+
+## 🛠 Technology Stack
+
+We chose a modern, scalable stack to ensure performance and maintainability:
+
+### **Backend (Python / FastAPI)**
+*   **Framework:** `FastAPI` for high-performance async endpoints.
+*   **LLM Orchestration:** `OpenAI GPT-4o` managed via custom agent loops.
+*   **Observability:** `Langfuse` for tracing agent thoughts and debugging costs.
+*   **Data:** `Supabase` (PostgreSQL) for scalable persistence.
+*   **PDF Generation:** `ReportLab` for programmatic document creation.
+
+### **Frontend (React / TypeScript)**
+*   **Framework:** `React` (Vite) for a responsive, client-side application.
+*   **Styling:** `Tailwind CSS` + `Shadcn UI` for a premium, accessible design.
+*   **State Management:** `TanStack Query` for robust server-state synchronization.
 
 ---
 
 ## 🚀 Key Features
 
-*   **📊 Smart Dashboard**: visualizes your portfolio's performance and "Impact Previsions" (how today's news affects *your* assets).
-*   **📰 AI News Analyst**: Automatically fetches, filters, and analyzes financial news. Assigns sentiment scores and risk levels specifically tailored to your holdinngs.
-*   **💬 Financial Assistant**: A conversational agent akin to a robust financial advisor. It can browse the web, check live stock prices, and analyze document uploads (PDFs) to answer complex investment queries.
-*   **🔒 Enterprise-Grade Security**: Fully secured with Supabase Authentication (JWT) and Row Level Security (RLS) policies ensuring data privacy.
-*   **👁️ Observability**: Integrated with **Langfuse** for full transparency into AI reasoning, latency, and costs.
+1.  **Agentic Chat Interface**: Ask complex questions like *"How does the Apple news affect my tech stocks?"*. The AI will use tools to search the web, check stock prices, and analyze fundamentals before answering.
+2.  **Smart News Feed**: A curated feed of financial news, automatically scored for sentiment and impact on *your* specific assets.
+3.  **Interactive Dashboard**: Real-time view of your portfolio performance with AI-generated "Impact Previsions".
+4.  **Executive Briefings**: Generate a downloadable PDF report summarizing the day's critical market movements tailored to you.
 
 ---
 
-## 🛠️ Technology Stack
-
-*   **Frontend**: React, Vite, TailwindCSS, shadcn/ui
-*   **Backend**: Python, FastAPI, Pydantic
-*   **Database**: PostgreSQL (Supabase)
-*   **AI Engine**: OpenAI GPT-4o
-*   **Tools**: DuckDuckGo Search, Yahoo Finance (yfinance), PyPDF2
-
-📄 **[Read the Architecture Documentation](docs/ARCHITECTURE.md)** for a deep dive into technical decisions.
-
----
-
-## 📦 Getting Started
+## 📦 Setup Instructions
 
 ### Prerequisites
 *   Node.js v18+
 *   Python 3.10+
 *   Supabase Account
+*   OpenAI API Key
 
-### 1. Backend Setup
-
+### 1. Clone the Repository
 ```bash
-cd finmate-nextjs/backend
-python -m venv venv
-# Activate venv (Windows: .\venv\Scripts\Activate.ps1 | Mac/Linux: source venv/bin/activate)
-
-pip install -r requirements.txt
+git clone https://github.com/abdul3532/senhor-finan-as.git
+cd senhor-finan-as/finmate-nextjs
 ```
 
-Create a `.env` file in `backend/` with your keys:
-```env
-OPENAI_API_KEY=sk-...
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=ey... (Service Role Key)
-LANGFUSE_SECRET_KEY=...
-LANGFUSE_PUBLIC_KEY=...
-LANGFUSE_HOST=https://cloud.langfuse.com
+### 2. Backend Setup
+```bash
+cd backend
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+# Create .env file
+cp .env.example .env
+# Fill in OPENAI_API_KEY, SUPABASE_URL, SUPABASE_KEY
 ```
 
 Run the server:
 ```bash
-uvicorn main:app --reload --port 8000
+python main.py
+```
+*Backend runs on http://localhost:8000*
+
+### 3. Frontend Setup
+```bash
+cd frontend
+npm install
+
+# Create .env file
+cp .env.example .env
+# Add VITE_API_URL=http://localhost:8000
 ```
 
-### 2. Frontend Setup
-
+Run the client:
 ```bash
-cd finmate-nextjs/frontend
-npm install
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) to view the app.
+*Frontend runs on http://localhost:5173*
 
 ---
 
-## ☁️ Deployment
-
-*   **Frontend**: Recommended deployment on **Vercel** or **Netlify**.
-*   **Backend**: Recommended deployment on **Render** or **Railway**.
-*   **Database**: Managed by **Supabase**.
-
-See `docs/ARCHITECTURE.md` for environmental configuration details.
+## 🧪 AI Observability
+We use **Langfuse** to monitor our AI Agent's performance. Traces include:
+*   Tool usage (Web Search, Stock Price lookup).
+*   LLM Latency and Token costs.
+*   User feedback scores.
 
 ---
 
 ## 👥 Team
-**NOVA IMS Capstone Project 2025/2026**
-*   Abdul Rehman
-*   Yan Sidoryk
-*   Henry Lewis
+*   **Abdul** - Lead Developer & Architect
+*   **Yan** - Backend Developer
+*   **Henry** - Frontend Developer
 
 ---
-*Disclaimer: This application provides financial information, not professional financial advice.*
+*Built with ❤️ for the NOVA IMS Data Science Capstone.*
