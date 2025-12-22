@@ -8,7 +8,7 @@
 
 ## 🌐 Live Demo
 
-- **Frontend**: [https://senhor-financas.vercel.app](https://senhor-financas.vercel.app) *(deploying)*
+- **Frontend**: [https://senhor-financas-v0.vercel.app](https://senhor-financas-v0.vercel.app)
 - **Backend API**: [https://senhor-finan-as-o2yt.onrender.com](https://senhor-finan-as-o2yt.onrender.com)
 - **API Docs**: [https://senhor-finan-as-o2yt.onrender.com/docs](https://senhor-finan-as-o2yt.onrender.com/docs)
 
