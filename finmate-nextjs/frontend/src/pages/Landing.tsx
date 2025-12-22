@@ -76,17 +76,95 @@ export default function Landing() {
                     </Link>
                 </div>
 
-                {/* Dashboard Preview Mockup */}
-                <div className="mt-20 relative w-full aspect-video rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm overflow-hidden shadow-2xl animate-fade-in-up delay-500 group">
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10" />
-                    <div className="absolute top-4 left-4 flex gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                        <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                <div className="mt-20 relative w-full aspect-video rounded-xl border border-white/10 bg-zinc-950/80 backdrop-blur-md overflow-hidden shadow-2xl animate-fade-in-up delay-500 group text-left">
+                    {/* Window Controls */}
+                    <div className="absolute top-0 left-0 right-0 h-12 bg-white/5 border-b border-white/5 flex items-center px-4 gap-2 z-20">
+                        <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
+                        <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+                        <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
+                        <div className="bg-black/50 px-3 py-1 rounded-md text-xs text-zinc-500 ml-4 font-mono">senhor-financas.com/dashboard</div>
                     </div>
-                    {/* Placeholder for dashboard screenshot */}
-                    <div className="w-full h-full flex items-center justify-center text-zinc-800 font-mono text-sm">
-                        [Interactive Dashboard Preview]
+
+                    {/* Mock Interface */}
+                    <div className="absolute inset-0 pt-12 p-6 flex gap-6 overflow-hidden">
+
+                        {/* Sidebar Mock */}
+                        <div className="w-64 hidden md:flex flex-col gap-4 border-r border-white/5 pr-6">
+                            <div className="h-8 w-8 rounded-lg bg-green-500 mb-6" />
+                            <div className="h-10 w-full rounded-lg bg-white/10" />
+                            <div className="h-10 w-full rounded-lg bg-transparent hover:bg-white/5" />
+                            <div className="h-10 w-full rounded-lg bg-transparent hover:bg-white/5" />
+                        </div>
+
+                        {/* Main Content Mock */}
+                        <div className="flex-1 flex flex-col gap-6">
+                            {/* Header */}
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <div className="h-4 w-32 bg-white/20 rounded mb-2" />
+                                    <div className="h-8 w-64 bg-white/10 rounded" />
+                                </div>
+                                <div className="h-10 w-32 bg-green-600 rounded-lg" />
+                            </div>
+
+                            {/* Cards Grid */}
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                {/* Card 1 */}
+                                <div className="bg-white/5 border border-white/5 p-4 rounded-xl">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center">🍎</div>
+                                        <div>
+                                            <div className="h-4 w-12 bg-white/20 rounded mb-1" />
+                                            <div className="h-3 w-20 bg-white/10 rounded" />
+                                        </div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-green-400">+$2.45</div>
+                                </div>
+                                {/* Card 2 */}
+                                <div className="bg-white/5 border border-white/5 p-4 rounded-xl">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-500 flex items-center justify-center">🚗</div>
+                                        <div>
+                                            <div className="h-4 w-12 bg-white/20 rounded mb-1" />
+                                            <div className="h-3 w-20 bg-white/10 rounded" />
+                                        </div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-red-400">-$1.20</div>
+                                </div>
+                                {/* Card 3 */}
+                                <div className="bg-white/5 border border-white/5 p-4 rounded-xl hidden lg:block">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center">🔍</div>
+                                        <div>
+                                            <div className="h-4 w-12 bg-white/20 rounded mb-1" />
+                                            <div className="h-3 w-20 bg-white/10 rounded" />
+                                        </div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-green-400">+$14.20</div>
+                                </div>
+                            </div>
+
+                            {/* News Feed Mock */}
+                            <div className="flex-1 bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col gap-4">
+                                <div className="h-6 w-40 bg-white/10 rounded mb-2" />
+
+                                <div className="flex gap-4 items-start">
+                                    <div className="w-24 h-16 bg-white/10 rounded-lg shrink-0" />
+                                    <div className="flex-1">
+                                        <div className="h-4 w-3/4 bg-white/20 rounded mb-2" />
+                                        <div className="h-3 w-1/2 bg-white/10 rounded" />
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 items-start">
+                                    <div className="w-24 h-16 bg-white/10 rounded-lg shrink-0" />
+                                    <div className="flex-1">
+                                        <div className="h-4 w-3/4 bg-white/20 rounded mb-2" />
+                                        <div className="h-3 w-1/2 bg-white/10 rounded" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </main>
