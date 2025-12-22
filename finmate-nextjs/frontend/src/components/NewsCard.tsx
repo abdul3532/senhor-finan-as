@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+
 import { cn } from "@/lib/utils";
 import type { NewsItem } from "@/lib/types";
 
@@ -15,17 +15,14 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
     let accentColor = "bg-green-500";
     let borderColor = "border-green-500/20";
     let bgHover = "hover:border-green-500/40";
-    let scoreBadgeClass = "text-green-500 border-green-500/20 bg-green-500/10";
 
     if (isNegative) {
         accentColor = "bg-red-500";
         borderColor = "border-red-500/20";
         bgHover = "hover:border-red-500/40";
-        scoreBadgeClass = "text-red-500 border-red-500/20 bg-red-500/10";
     }
 
-    // Determine impact scale visual (+3, +1, -2 etc)
-    const impactVal = item.sentiment_score > 7 ? "+3" : item.sentiment_score > 5 ? "+1" : "-1";
+
 
     return (
         <div

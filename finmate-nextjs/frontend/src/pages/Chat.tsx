@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { usePortfolio, useNews, useChat, useUploadDocument, useChatHistory, useChatMessages } from "@/lib/api";
-import { Send, Upload, FileText, Bot, User, Sparkles, Paperclip, X, MessageSquare, History, Plus } from "lucide-react";
+import { Send, Upload, FileText, Bot, User, Sparkles, Paperclip, X, History, Plus } from "lucide-react";
 import type { ChatMessage, Conversation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,12 +73,11 @@ export default function Chat() {
 
         chat.mutate({
             query: textToSend,
-            conversation_id: conversationId || undefined,
             portfolio: portfolio?.tickers,
             news_context: news,
             document_context: documentContext
         }, {
-            onSuccess: (response) => {
+            onSuccess: (response: any) => {
                 // Determine Conversation ID from response if it was new
                 if (!conversationId && response.conversation_id) {
                     setConversationId(response.conversation_id);
@@ -86,7 +85,7 @@ export default function Chat() {
                 }
 
                 // Append assistant message
-                setMessages(prev => [...prev, response]);
+                setMessages(prev => [...prev, { role: "assistant", content: response.response }]);
             }
         });
     };
@@ -352,7 +351,7 @@ export default function Chat() {
                                 disabled={chat.isPending}
                                 className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-zinc-600 rounded-full py-6 pl-6 pr-12"
                             />
-                            <Button onClick={handleSendMessage} disabled={!input.trim() || chat.isPending} size="icon" className="absolute right-1.5 top-1.5 bottom-1.5 w-9 h-9 rounded-full bg-primary hover:bg-primary/90">
+                            <Button onClick={() => handleSendMessage()} disabled={!input.trim() || chat.isPending} size="icon" className="absolute right-1.5 top-1.5 bottom-1.5 w-9 h-9 rounded-full bg-primary hover:bg-primary/90">
                                 <Send className="h-4 w-4" />
                             </Button>
                         </div>
