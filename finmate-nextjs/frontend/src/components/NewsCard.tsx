@@ -99,7 +99,7 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
                                 )}
                             </span>
                             <span className="mx-2">•</span>
-                            <span>{item.published ? new Date(item.published).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span>{item.published ? new Date(item.published).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                     </div>
                 </div>

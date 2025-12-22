@@ -1,3 +1,4 @@
+// ... imports remain same
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { usePortfolio, useAddTicker, useRemoveTicker } from "@/lib/api";
 import { Plus, Trash2, Wallet, TrendingUp, TrendingDown, Search } from "lucide-react";
-
-
 import { useStockQuote } from "@/lib/api";
 import { CompanyDetailModal } from "@/components/CompanyDetailModal";
 
@@ -24,15 +23,15 @@ function TickerCard({ ticker, details, onSelect, onRemove, isRemoving }: TickerC
     return (
         <div
             onClick={onSelect}
-            className="group flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:border-white/10 hover:translate-x-1 cursor-pointer"
+            className="group flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card/50 hover:bg-accent/50 transition-all duration-300 hover:border-border hover:translate-x-1 cursor-pointer shadow-sm"
         >
             <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center text-2xl border border-white/10">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-2xl border border-border">
                     {details.icon}
                 </div>
                 <div>
                     <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-white text-lg">{ticker}</h3>
+                        <h3 className="font-bold text-foreground text-lg">{ticker}</h3>
                         <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/20 text-[10px] px-1.5 h-5">
                             LIVE
                         </Badge>
@@ -45,21 +44,21 @@ function TickerCard({ ticker, details, onSelect, onRemove, isRemoving }: TickerC
                 <div className="hidden sm:block text-right mr-4">
                     {isLoading ? (
                         <div className="flex flex-col items-end gap-1">
-                            <div className="h-5 w-20 bg-white/10 rounded animate-pulse" />
-                            <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
+                            <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                            <div className="h-4 w-12 bg-muted/50 rounded animate-pulse" />
                         </div>
                     ) : quote ? (
                         <div className="flex flex-col items-end">
-                            <div className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
+                            <div className="text-lg font-bold font-mono tracking-tight text-foreground flex items-center gap-2">
                                 ${quote.price.toFixed(2)}
                             </div>
-                            <div className={`flex items-center gap-1 text-xs font-medium ${quote.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            <div className={`flex items-center gap-1 text-xs font-medium ${quote.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                 {quote.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                 <span>{quote.change > 0 ? '+' : ''}{quote.change.toFixed(2)} ({quote.change_percent.toFixed(2)}%)</span>
                             </div>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-1 text-zinc-500 text-sm font-medium">
+                        <div className="flex items-center gap-1 text-muted-foreground text-sm font-medium">
                             <span>Unavailable</span>
                         </div>
                     )}
@@ -72,7 +71,7 @@ function TickerCard({ ticker, details, onSelect, onRemove, isRemoving }: TickerC
                         onRemove();
                     }}
                     disabled={isRemoving}
-                    className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                 >
                     <Trash2 className="h-5 w-5" />
                 </Button>
@@ -134,10 +133,8 @@ export default function Portfolio() {
         <div className="space-y-8 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight mb-2">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-                            Portfolio Management
-                        </span>
+                    <h1 className="text-4xl font-bold tracking-tight mb-2 text-foreground">
+                        Portfolio Management
                     </h1>
                     <p className="text-muted-foreground text-lg">
                         Track and manage your assets
@@ -148,12 +145,12 @@ export default function Portfolio() {
             <div className="grid md:grid-cols-3 gap-8">
                 {/* Left Column: Add Ticker */}
                 <div className="md:col-span-1 space-y-6">
-                    <Card className="glass-card p-6 border-white/10">
+                    <Card className="glass-card p-6 border-border/50">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <Plus className="w-5 h-5" />
                             </div>
-                            <h2 className="text-xl font-semibold text-white">Add Asset</h2>
+                            <h2 className="text-xl font-semibold text-foreground">Add Asset</h2>
                         </div>
 
                         <div className="space-y-4">
@@ -164,27 +161,27 @@ export default function Portfolio() {
                                     value={newTicker}
                                     onChange={(e) => setNewTicker(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleAddTicker()}
-                                    className="pl-9 bg-black/20 border-white/10 text-white placeholder:text-zinc-500 focus:ring-primary/50 focus:border-primary/50"
+                                    className="pl-9 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:ring-primary/50 focus:border-primary/50"
                                 />
                             </div>
                             <Button
                                 onClick={handleAddTicker}
                                 disabled={!newTicker.trim() || addTicker.isPending}
-                                className="w-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                             >
                                 {addTicker.isPending ? "Adding..." : "Add to Portfolio"}
                             </Button>
                         </div>
                     </Card>
 
-                    <Card className="glass-card p-6 border-white/10 bg-gradient-to-br from-primary/10 to-transparent">
+                    <Card className="glass-card p-6 border-border/50 bg-gradient-to-br from-primary/5 to-transparent">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                <Wallet className="w-5 h-5 text-white" />
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Wallet className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-white">Total Assets</h3>
-                                <p className="text-2xl font-bold text-white">{portfolio?.tickers.length || 0}</p>
+                                <h3 className="font-semibold text-foreground">Total Assets</h3>
+                                <p className="text-2xl font-bold text-foreground">{portfolio?.tickers.length || 0}</p>
                             </div>
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -195,9 +192,9 @@ export default function Portfolio() {
 
                 {/* Right Column: List */}
                 <div className="md:col-span-2">
-                    <Card className="glass-card border-white/10 min-h-[500px]">
-                        <div className="p-6 border-b border-white/10">
-                            <h2 className="text-xl font-semibold text-white">Your Holdings</h2>
+                    <Card className="glass-card border-border/50 min-h-[500px]">
+                        <div className="p-6 border-b border-border/50">
+                            <h2 className="text-xl font-semibold text-foreground">Your Holdings</h2>
                         </div>
 
                         <div className="p-6">
@@ -209,11 +206,11 @@ export default function Portfolio() {
 
                             {portfolio && portfolio.tickers.length === 0 && !isLoading && (
                                 <div className="text-center py-12">
-                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                                        <Wallet className="w-8 h-8 text-zinc-600" />
+                                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                                        <Wallet className="w-8 h-8 text-muted-foreground" />
                                     </div>
                                     <p className="text-muted-foreground mb-2">No assets tracked yet</p>
-                                    <p className="text-sm text-zinc-600">Add your first ticker to get started</p>
+                                    <p className="text-sm text-muted-foreground">Add your first ticker to get started</p>
                                 </div>
                             )}
 

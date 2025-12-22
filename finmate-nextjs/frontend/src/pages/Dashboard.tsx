@@ -154,13 +154,14 @@ export default function Dashboard() {
                 )}
 
                 <div className="grid gap-4">
-                    {news?.map((item: NewsItem, index) => (
-                        <NewsCard
-                            key={item.id || index}
-                            item={item}
-                            onClick={() => setSelectedNews(item)}
-                        />
-                    ))}
+                    {news?.sort((a, b) => new Date(b.published || 0).getTime() - new Date(a.published || 0).getTime())
+                        .map((item: NewsItem, index) => (
+                            <NewsCard
+                                key={item.id || index}
+                                item={item}
+                                onClick={() => setSelectedNews(item)}
+                            />
+                        ))}
                 </div>
             </section>
 

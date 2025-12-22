@@ -15,7 +15,7 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-800 text-white p-0 overflow-hidden gap-0">
+            <DialogContent className="max-w-2xl bg-card border-border text-foreground p-0 overflow-hidden gap-0">
                 <DialogHeader className="p-6 pb-0 text-left">
                     <div className="space-y-2">
                         <div className="flex justify-between items-start">
@@ -33,8 +33,8 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
                     <div className="space-y-4">
                         {/* Summary Section - Moved to top as primary info */}
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-400 mb-2">Summary</h3>
-                            <p className="text-zinc-300 text-sm leading-relaxed">
+                            <h3 className="text-sm font-semibold text-muted-foreground mb-2">Summary</h3>
+                            <p className="text-foreground text-sm leading-relaxed">
                                 {newsItem.summary}
                             </p>
                         </div>
@@ -42,8 +42,8 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
                         {/* Sentiment Bar Visualization */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-sm font-semibold text-zinc-400">Sentiment Analysis</h3>
-                                <span className="text-sm font-mono text-zinc-300">{newsItem.sentiment_score}/10</span>
+                                <h3 className="text-sm font-semibold text-muted-foreground">Sentiment Analysis</h3>
+                                <span className="text-sm font-mono text-foreground">{newsItem.sentiment_score}/10</span>
                             </div>
                             <div className="relative h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
                                 <div className="absolute inset-y-0 left-0 right-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 opacity-80" />
@@ -61,8 +61,8 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
 
                         {/* Overall Impact Section */}
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-400 mb-2">Overall Impact</h3>
-                            <p className="text-zinc-300 text-sm leading-relaxed mb-3">
+                            <h3 className="text-sm font-semibold text-muted-foreground mb-2">Overall Impact</h3>
+                            <p className="text-foreground text-sm leading-relaxed mb-3">
                                 {newsItem.impact_reason || "AI analysis of impact is pending or unavailable."}
                             </p>
 

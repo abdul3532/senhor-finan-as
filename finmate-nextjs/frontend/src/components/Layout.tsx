@@ -80,8 +80,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/10 flex items-center justify-center shadow-lg cursor-pointer hover:ring-2 ring-primary ring-offset-2 ring-offset-background transition-all">
-                                    <span className="text-sm font-medium text-white">SW</span>
+                                <button className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 border border-border/50 flex items-center justify-center shadow-lg cursor-pointer hover:ring-2 ring-primary ring-offset-2 ring-offset-background transition-all">
+                                    <span className="text-sm font-medium text-primary-foreground">SW</span>
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">

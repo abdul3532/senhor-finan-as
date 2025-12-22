@@ -48,59 +48,61 @@ export default function Auth() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white p-4 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px]" />
             <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]" />
 
             <div className="w-full max-w-md relative z-10 animate-fade-in-up">
-                <Link to="/" className="inline-flex items-center text-zinc-400 hover:text-white mb-8 transition-colors">
+                <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8 transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
                 </Link>
 
                 <div className="text-center mb-8">
                     <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-xl shadow-lg shadow-primary/20 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold">{mode === "login" ? "Welcome Back" : "Create an Account"}</h1>
-                    <p className="text-zinc-400 text-sm mt-2">
+                    <p className="text-muted-foreground text-sm mt-2">
                         {mode === "login" ? "Enter your credentials to access your terminal." : "Start your journey with AI-powered finance."}
                     </p>
                 </div>
 
-                <Card className="glass-card border-white/10 p-6 backdrop-blur-xl">
+                <Card className="glass-card border-border/50 p-6 backdrop-blur-xl">
                     <form onSubmit={handleAuth} className="space-y-4">
                         {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg">
+                            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 rounded-lg">
                                 {error}
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Email</label>
+                            <label className="text-sm font-medium text-foreground">Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="email"
                                     placeholder="name@example.com"
-                                    className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-zinc-600 focus:border-primary/50"
+                                    className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    autoComplete="username"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Password</label>
+                            <label className="text-sm font-medium text-foreground">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-zinc-600 focus:border-primary/50"
+                                    className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     minLength={6}
+                                    autoComplete="current-password"
                                 />
                             </div>
                         </div>
@@ -112,7 +114,7 @@ export default function Auth() {
                     </form>
 
                     <div className="mt-6 text-center text-sm">
-                        <span className="text-zinc-500">
+                        <span className="text-muted-foreground">
                             {mode === "login" ? "Don't have an account? " : "Already have an account? "}
                         </span>
                         <Link

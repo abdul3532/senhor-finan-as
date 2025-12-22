@@ -1,60 +1,71 @@
-import { useState } from "react";
+// ... imports
+import { useState, useMemo } from "react";
 import { NewsCard } from "@/components/NewsCard";
-import { Filter, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { RefreshCw, Filter, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useNews, useRefreshNews } from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNews, useRefreshNews, usePortfolio } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { NewsItem } from "@/lib/types";
+import { NewsDetailModal } from "@/components/NewsDetailModal";
 
 export default function NewsPage() {
-    // UI Filters State
-    const [filters, setFilters] = useState({
-        usEquity: false,
-        euEquity: false,
-        chEquity: false, // China/Switzerland? Assuming CH is Swiss given CHF in screenshot
-        ukEquity: false,
-        jpEquity: false,
-        emEquity: false,
-        government: false,
-        corporate: false,
-        usd: false,
-        chf: false
-    });
+    const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+    const [filterSource, setFilterSource] = useState("all");
+    const [filterPeriod, setFilterPeriod] = useState("all");
+    const [filterTicker, setFilterTicker] = useState("all");
+    const [sortBy, setSortBy] = useState("newest");
 
-    const toggleFilter = (key: keyof typeof filters) => {
-        setFilters(prev => ({ ...prev, [key]: !prev[key] }));
-    };
-
-    // Fetch News using hook
     const { data: news = [], isLoading, isRefetching } = useNews();
+    const { data: portfolio } = usePortfolio();
     const refreshMutation = useRefreshNews();
 
-    // Filter Logic
-    const filteredNews = news.filter((item: NewsItem) => {
-        // Intelligent Filters (Mock Logic - in real app, check item.tags or item.asset_class)
-        // Here we try to match based on text content if filters are active
-        const activeFilters = Object.entries(filters).filter(([_, val]) => val);
-        if (activeFilters.length > 0) {
-            let matches = false;
-            const content = (item.headline + " " + item.summary + " " + item.affected_tickers.join(" ")).toLowerCase();
+    // extract unique sources
+    const sources = useMemo(() => {
+        const unique = new Set(news.map((i: NewsItem) => i.source || "Unknown"));
+        return Array.from(unique).filter(Boolean) as string[];
+    }, [news]);
 
-            if (filters.usEquity && (content.includes("us") || content.includes("usa") || content.includes("nasdaq") || content.includes("nyse"))) matches = true;
-            if (filters.euEquity && (content.includes("eu") || content.includes("europe") || content.includes("ecb"))) matches = true;
-            if (filters.chEquity && (content.includes("swiss") || content.includes("chf") || content.includes("china"))) matches = true;
-            // ... add more logic as needed for MVP
+    // Derived state for filtered news
+    const filteredNews = useMemo(() => {
+        return news.filter((item: NewsItem) => {
+            // 1. Source Filter
+            if (filterSource !== "all" && (item.source || "Unknown") !== filterSource) return false;
 
-            // If no intelligent match found but filters are active, maybe show all? 
-            // For now, let's just return true if no specific match logic is better implemented, 
-            // OR strictly filter. Let's strictly filter if they selected something.
-            if (!matches) return false;
-        }
+            // 2. Ticker Filter
+            if (filterTicker !== "all") {
+                if (!item.affected_tickers.includes(filterTicker)) return false;
+            }
 
-        return true;
-    });
+            // 3. Period Filter
+            if (filterPeriod !== "all") {
+                const date = new Date(item.published || new Date());
+                const now = new Date();
+                const diffTime = Math.abs(now.getTime() - date.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (filterPeriod === "24h" && diffTime > 1000 * 60 * 60 * 24) return false;
+                if (filterPeriod === "week" && diffDays > 7) return false;
+                if (filterPeriod === "month" && diffDays > 30) return false;
+            }
+
+            return true;
+        }).sort((a: NewsItem, b: NewsItem) => {
+            if (sortBy === "newest") {
+                return (new Date(b.published || 0).getTime()) - (new Date(a.published || 0).getTime());
+            }
+            if (sortBy === "sentiment_high") {
+                return b.sentiment_score - a.sentiment_score;
+            }
+            if (sortBy === "sentiment_low") {
+                return a.sentiment_score - b.sentiment_score;
+            }
+            return 0;
+        });
+    }, [news, filterSource, filterPeriod, filterTicker, sortBy]);
 
     return (
-        <div className="min-h-screen bg-transparent p-6 md:p-12 space-y-8 animate-fade-in">
+        <div className="min-h-screen p-6 md:p-12 space-y-8 animate-fade-in pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-2">
                 <div>
@@ -77,129 +88,98 @@ export default function NewsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Sidebar Filters */}
-                <div className="hidden lg:block lg:col-span-3 space-y-8">
-                    <div className="flex items-center gap-2 mb-6">
-                        <Filter className="w-5 h-5 text-muted-foreground" />
-                        <span className="font-semibold text-lg">Portfolio Filters</span>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                            <SlidersHorizontal className="w-4 h-4" />
-                            Asset Classes
-                        </div>
-                        <div className="space-y-3 pl-2">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="us" checked={filters.usEquity} onCheckedChange={() => toggleFilter('usEquity')} />
-                                <label htmlFor="us" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    US Equity
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="eu" checked={filters.euEquity} onCheckedChange={() => toggleFilter('euEquity')} />
-                                <label htmlFor="eu" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    EU Equity
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="ch" checked={filters.chEquity} onCheckedChange={() => toggleFilter('chEquity')} />
-                                <label htmlFor="ch" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    CH Equity
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="uk" checked={filters.ukEquity} onCheckedChange={() => toggleFilter('ukEquity')} />
-                                <label htmlFor="uk" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    UK Equity
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="jp" checked={filters.jpEquity} onCheckedChange={() => toggleFilter('jpEquity')} />
-                                <label htmlFor="jp" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    JP Equity
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="em" checked={filters.emEquity} onCheckedChange={() => toggleFilter('emEquity')} />
-                                <label htmlFor="em" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    EM Equity
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-border/40">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                            <span className="text-lg font-mono">$</span>
-                            Fixed Income
-                        </div>
-                        <div className="space-y-3 pl-2">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="gov" checked={filters.government} onCheckedChange={() => toggleFilter('government')} />
-                                <label htmlFor="gov" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    Government
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="corp" checked={filters.corporate} onCheckedChange={() => toggleFilter('corporate')} />
-                                <label htmlFor="corp" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    Corporate
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-border/40">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                            <RefreshCw className="w-4 h-4" />
-                            Currencies
-                        </div>
-                        <div className="space-y-3 pl-2">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="usd" checked={filters.usd} onCheckedChange={() => toggleFilter('usd')} />
-                                <label htmlFor="usd" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    USD
-                                </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="chf" checked={filters.chf} onCheckedChange={() => toggleFilter('chf')} />
-                                <label htmlFor="chf" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    CHF
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+            {/* Filters Bar */}
+            <div className="flex flex-wrap items-center gap-4 bg-card border border-border/50 p-4 rounded-xl shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mr-2">
+                    <Filter className="w-4 h-4" />
+                    Filters:
                 </div>
 
-                {/* News Feed */}
-                <div className="col-span-1 lg:col-span-9 space-y-6">
-                    {isLoading ? (
-                        <div className="space-y-4 animate-pulse">
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="h-48 bg-zinc-900/10 dark:bg-zinc-800/50 rounded-xl" />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {filteredNews.map((item: NewsItem) => (
-                                <NewsCard
-                                    key={item.id}
-                                    item={item}
-                                    onClick={() => { }}
-                                />
-                            ))}
+                {/* Source Filter */}
+                <Select value={filterSource} onValueChange={setFilterSource}>
+                    <SelectTrigger className="w-[180px] bg-background border-input">
+                        <SelectValue placeholder="All Sources" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Sources</SelectItem>
+                        {sources.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-                            {filteredNews.length === 0 && (
-                                <div className="py-20 text-center text-muted-foreground border border-dashed border-border rounded-xl">
-                                    No news found matching your filters.
-                                </div>
-                            )}
-                        </div>
-                    )}
+                {/* Period Filter */}
+                <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                    <SelectTrigger className="w-[140px] bg-background border-input">
+                        <SelectValue placeholder="Any Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Any Time</SelectItem>
+                        <SelectItem value="24h">Last 24 Hours</SelectItem>
+                        <SelectItem value="week">Past Week</SelectItem>
+                        <SelectItem value="month">Past Month</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                {/* Portfolio Ticker Filter */}
+                <Select value={filterTicker} onValueChange={setFilterTicker}>
+                    <SelectTrigger className="w-[160px] bg-background border-input">
+                        <SelectValue placeholder="Filter by Ticker" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Tickers</SelectItem>
+                        {portfolio?.tickers.map((t: string) => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <div className="h-6 w-px bg-border mx-2" />
+
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mr-2">
+                    <ArrowUpDown className="w-4 h-4" />
+                    Sort:
                 </div>
+
+                {/* Sort */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[180px] bg-background border-input">
+                        <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="sentiment_high">Sentiment (Highest)</SelectItem>
+                        <SelectItem value="sentiment_low">Sentiment (Lowest)</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
+
+            {/* Content */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {isLoading ? (
+                    [1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="h-48 bg-muted/50 rounded-xl animate-pulse" />
+                    ))
+                ) : filteredNews.length > 0 ? (
+                    filteredNews.map((item: NewsItem) => (
+                        <NewsCard
+                            key={item.id}
+                            item={item}
+                            onClick={() => setSelectedNews(item)}
+                        />
+                    ))
+                ) : (
+                    <div className="col-span-full py-20 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                        No news found matching your filters.
+                    </div>
+                )}
+            </div>
+
+            <NewsDetailModal
+                isOpen={!!selectedNews}
+                onClose={() => setSelectedNews(null)}
+                newsItem={selectedNews}
+            />
         </div>
     );
 }
