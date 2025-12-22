@@ -103,6 +103,39 @@ npm run dev
 
 ---
 
+## 📂 Project Structure
+
+```bash
+senhor-finan-as/
+├── finmate-nextjs/
+│   ├── backend/
+│   │   ├── api/            # FastAPI Routers (Endpoints)
+│   │   ├── services/       # Business Logic (LLM, News, Portfolio)
+│   │   ├── models/         # Pydantic Data Models
+│   │   └── main.py         # Application Entry Point
+│   ├── frontend/
+│   │   ├── src/
+│   │   │   ├── components/ # Reusable UI Components
+│   │   │   ├── pages/      # Route Pages (Dashboard, Chat, News)
+│   │   │   └── lib/        # API Clients & Utilities
+│   │   └── package.json
+├── docs/
+│   └── ARCHITECTURE.md     # System Design Documentation
+└── README.md               # You are here
+```
+
+## 🎮 Usage Workflow
+
+1.  **Sign Up/Login**: Create a secure account via Supabase Auth.
+2.  **Add Assets**: Go to the Portfolio tab and add tickers (e.g., `NVDA`, `TSLA`).
+3.  **Check the Dashboard**: See real-time "Impact Scores" for your assets based on today's news.
+4.  **Ask the Agent**:
+    *   *Input*: "Should I hold Tesla through earnings?"
+    *   *Agent Action*: Checks live price → Searches news → Analyzes fundamentals → Responds.
+5.  **Generate Report**: Click "Download Briefing" to get a PDF summary for offline reading.
+
+---
+
 ## 🧪 AI Observability
 We use **Langfuse** to monitor our AI Agent's performance. Traces include:
 *   Tool usage (Web Search, Stock Price lookup).
@@ -112,9 +145,11 @@ We use **Langfuse** to monitor our AI Agent's performance. Traces include:
 ---
 
 ## 👥 Team
-*   **Abdul** - Lead Developer & Architect
-*   **Yan** - Backend Developer
-*   **Henry** - Frontend Developer
+## 👥 Team
+
+*   **Abdul** - Lead Developer & Architect - *Full Stack Development & System Design*
+*   **Yan** - Backend Developer - *API Implementation & AI Services*
+*   **Henry** - Frontend Developer - *UI/UX Design & Data Visualization*
 
 ---
 *Built with ❤️ for the NOVA IMS Data Science Capstone.*
