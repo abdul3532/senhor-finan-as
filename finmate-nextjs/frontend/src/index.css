@@ -6,18 +6,54 @@
 
 @layer base {
   :root {
+    /* Light Mode (Default) */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 142.1 76.2% 36.3%;
+
+    --radius: 0.75rem;
+
+    /* Semantic Status Colors */
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --info: 217 91% 60%;
+  }
+
+  .dark {
     /* Premium Dark Theme Colors */
     --background: 0 0% 7%;
     --foreground: 0 0% 98%;
 
-    /* Card with glassmorphism */
     --card: 0 0% 10%;
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    /* Accent colors */
     --primary: 142 76% 36%;
     --primary-foreground: 0 0% 98%;
 
@@ -30,20 +66,12 @@
     --accent: 142 76% 36%;
     --accent-foreground: 0 0% 98%;
 
-    /* Status colors */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
-    --info: 217 91% 60%;
-
-    /* Borders and inputs */
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 142 76% 36%;
-
-    --radius: 0.75rem;
   }
 }
 
@@ -73,7 +101,7 @@
 
   /* Glassmorphism Card */
   .glass-card {
-    @apply bg-card/40 backdrop-blur-xl border border-white/10 rounded-xl;
+    @apply bg-card/60 backdrop-blur-xl border border-border/40 rounded-xl;
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.3),
       0 2px 4px -1px rgba(0, 0, 0, 0.2),

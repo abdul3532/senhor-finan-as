@@ -11,15 +11,15 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
     // Determine styles based on impact/sentiment
     const isNegative = item.impact === 'negative' || item.sentiment_score < 4;
 
-    // Default neutral/great colors
+    // Default neutral/great colors - adaptable for light/dark
     let accentColor = "bg-green-500";
-    let borderColor = "border-green-500/20";
-    let bgHover = "hover:border-green-500/40";
+    let borderColor = "border-border"; // Neutral border by default
+    let bgHover = "hover:border-green-500/50 hover:shadow-lg";
 
     if (isNegative) {
         accentColor = "bg-red-500";
-        borderColor = "border-red-500/20";
-        bgHover = "hover:border-red-500/40";
+        borderColor = "border-border";
+        bgHover = "hover:border-red-500/50 hover:shadow-lg";
     }
 
 
@@ -87,19 +87,19 @@ export function NewsCard({ item, onClick }: NewsCardProps) {
                             <span className="flex items-center gap-1">
                                 {item.affected_tickers.length > 0 ? (
                                     <>
-                                        <span>{item.affected_tickers[0]}</span>
+                                        <span className="px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[10px] font-bold border border-border">{item.affected_tickers[0]}</span>
                                         {item.affected_tickers.length > 1 && (
-                                            <span className="text-muted-foreground/70">
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground border border-border">
                                                 +{item.affected_tickers.length - 1}
                                             </span>
                                         )}
                                     </>
                                 ) : (
-                                    <span>General</span>
+                                    <span className="px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[10px] font-bold border border-border">General</span>
                                 )}
                             </span>
                             <span className="mx-2">•</span>
-                            <span>{item.published || new Date().toLocaleDateString()}</span>
+                            <span>{item.published ? new Date(item.published).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                     </div>
                 </div>
