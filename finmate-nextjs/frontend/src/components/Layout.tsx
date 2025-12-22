@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, PieChart, MessageSquare, Newspaper, Settings, LogOut } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 import { SettingsModal } from "./SettingsModal";
+import { supabase } from "@/lib/supabase";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,6 +15,7 @@ import {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const location = useLocation();
+    const navigate = useNavigate();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
 
@@ -26,11 +28,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }, []);
 
     const navItems = [
-        { name: "Home", path: "/", icon: LayoutDashboard },
+        { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { name: "Portfolio", path: "/portfolio", icon: PieChart },
         { name: "News", path: "/news", icon: Newspaper },
         { name: "Assistant", path: "/chat", icon: MessageSquare },
     ];
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate("/");
+    };
 
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
@@ -83,7 +90,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                     <span>Settings</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                                     <LogOut className="mr-2 h-4 w-4" />
                                     <span>Logout</span>
                                 </DropdownMenuItem>

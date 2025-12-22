@@ -8,33 +8,45 @@ logger = logging.getLogger(__name__)
 # Constants (Kept for fallback logic if needed, but primary is DB)
 DEFAULT_PORTFOLIO_NAME = "My Portfolio"
 
-def get_default_portfolio_id() -> str:
-    """Helper to get the ID of the default portfolio"""
+import logging
+import yfinance as yf
+from typing import List, Dict, Any, Tuple
+from db.client import supabase
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_PORTFOLIO_NAME = "My Portfolio"
+
+def get_user_portfolio_id(user_id: str) -> str:
+    """Get the ID of the portfolio for a specific user. Auto-creates if missing."""
     if not supabase:
         raise Exception("Database connection failed")
         
-    res = supabase.table("portfolios").select("id").eq("name", DEFAULT_PORTFOLIO_NAME).execute()
+    res = supabase.table("portfolios").select("id").eq("user_id", user_id).execute()
     if res.data:
         return res.data[0]['id']
     
     # Create if not exists
-    res = supabase.table("portfolios").insert({"name": DEFAULT_PORTFOLIO_NAME}).execute()
+    res = supabase.table("portfolios").insert({
+        "name": DEFAULT_PORTFOLIO_NAME,
+        "user_id": user_id
+    }).execute()
     return res.data[0]['id']
 
 # --- Portfolio Tickers ---
 
-def load_portfolio() -> List[str]:
-    """Fetch tickers from Supabase"""
+def load_portfolio(user_id: str) -> List[str]:
+    """Fetch tickers from Supabase for a specific user"""
     if not supabase:
         logger.error("Supabase not available")
         return []
         
     try:
-        pid = get_default_portfolio_id()
+        pid = get_user_portfolio_id(user_id)
         res = supabase.table("portfolio_items").select("ticker").eq("portfolio_id", pid).execute()
         return [item['ticker'] for item in res.data]
     except Exception as e:
-        logger.error(f"Failed to load portfolio: {e}")
+        logger.error(f"Failed to load portfolio for user {user_id}: {e}")
         return []
 
 def save_portfolio(tickers: List[str]):
@@ -43,12 +55,16 @@ def save_portfolio(tickers: List[str]):
 
 # --- Company Profiles ---
 
-def load_profiles() -> Dict[str, Any]:
-    """Fetch all cached profiles from DB"""
+def load_profiles(filter_tickers: List[str] = None) -> Dict[str, Any]:
+    """Fetch cached profiles from DB, optionally filtered by tickers"""
     if not supabase:
         return {}
     try:
-        res = supabase.table("company_profiles").select("*").execute()
+        query = supabase.table("company_profiles").select("*")
+        if filter_tickers and len(filter_tickers) > 0:
+            query = query.in_("ticker", filter_tickers)
+            
+        res = query.execute()
         profiles = {}
         for row in res.data:
             profiles[row['ticker']] = {
@@ -104,22 +120,17 @@ def fetch_company_profile(ticker: str) -> Dict[str, Any]:
 
 # --- Actions ---
 
-from typing import List, Dict, Any, Tuple
-
-def add_ticker(ticker: str) -> Tuple[List[str], Dict[str, Any]]:
+def add_ticker(ticker: str, user_id: str) -> Tuple[List[str], Dict[str, Any]]:
     ticker = ticker.upper()
     
     if not supabase:
         logger.error("Database unavailable")
-        return []
+        return [], {}
 
     try:
-        pid = get_default_portfolio_id()
+        pid = get_user_portfolio_id(user_id)
         
-        # 1. Add to portfolio_items (Upsert handles duplicates gracefully via ON CONFLICT if configured, 
-        # but here we rely on Supabase returning error or success. 
-        # Better to check existence or just try insert and catch error)
-        
+        # 1. Add to portfolio_items
         # Check if exists first
         existing = supabase.table("portfolio_items").select("*").eq("portfolio_id", pid).eq("ticker", ticker).execute()
         if not existing.data:
@@ -128,7 +139,7 @@ def add_ticker(ticker: str) -> Tuple[List[str], Dict[str, Any]]:
                 "ticker": ticker
             }).execute()
         
-        # 2. Add/Update Profile
+        # 2. Add/Update Profile (Global)
         profile = fetch_company_profile(ticker)
         
     except Exception as e:
@@ -136,18 +147,18 @@ def add_ticker(ticker: str) -> Tuple[List[str], Dict[str, Any]]:
         profile = {}
         
     # Return updated list AND the profile
-    return load_portfolio(), profile
+    return load_portfolio(user_id), profile
 
-def remove_ticker(ticker: str) -> List[str]:
+def remove_ticker(ticker: str, user_id: str) -> List[str]:
     ticker = ticker.upper()
     
     if not supabase:
         return []
         
     try:
-        pid = get_default_portfolio_id()
+        pid = get_user_portfolio_id(user_id)
         supabase.table("portfolio_items").delete().eq("portfolio_id", pid).eq("ticker", ticker).execute()
     except Exception as e:
         logger.error(f"Error removing ticker {ticker}: {e}")
         
-    return load_portfolio()
+    return load_portfolio(user_id)

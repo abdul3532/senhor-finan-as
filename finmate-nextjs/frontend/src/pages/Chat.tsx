@@ -58,20 +58,21 @@ export default function Chat() {
         // Messages will load via useEffect -> serverMessages
     };
 
-    const handleSendMessage = () => {
-        if (!input.trim()) return;
+    const handleSendMessage = (overrideInput?: string) => {
+        const textToSend = overrideInput || input;
+        if (!textToSend.trim()) return;
 
         const userMessage: ChatMessage = {
             role: "user",
-            content: input
+            content: textToSend
         };
 
         // Optimistic update
         setMessages(prev => [...prev, userMessage]);
-        setInput("");
+        setInput(""); // Always clear input even if using override
 
         chat.mutate({
-            query: input,
+            query: textToSend,
             conversation_id: conversationId || undefined,
             portfolio: portfolio?.tickers,
             news_context: news,
@@ -261,9 +262,55 @@ export default function Chat() {
                             <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
                                 <Bot className="w-16 h-16 text-white/20 mb-4" />
                                 <h3 className="text-xl font-medium text-white mb-2">How can I help you today?</h3>
-                                <p className="text-sm text-zinc-400 max-w-md">
+                                <p className="text-sm text-zinc-400 max-w-md mb-8">
                                     Ready to analyze your portfolio or discuss market trends.
                                 </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
+                                    {/* Dynamic Prompts based on Portfolio */}
+                                    {portfolio && portfolio.tickers.length > 0 ? (
+                                        <>
+                                            {portfolio.tickers.slice(0, 2).map(ticker => (
+                                                <Button
+                                                    key={ticker}
+                                                    variant="outline"
+                                                    className="justify-start h-auto py-3 px-4 bg-white/5 border-white/10 hover:bg-white/10 hover:text-primary text-zinc-300 text-sm whitespace-normal text-left"
+                                                    onClick={() => {
+                                                        setInput(`Analyze ${ticker} fundamentals and technicals`);
+                                                        // setTimeout to allow state update before sending, or refactor handleSendMessage. 
+                                                        // Better: call handleSendMessage directly with content
+                                                        handleSendMessage(`Analyze ${ticker} fundamentals and technicals`);
+                                                    }}
+                                                >
+                                                    <span className="truncate">Analyze <strong>{ticker}</strong> fundamentals</span>
+                                                </Button>
+                                            ))}
+                                            <Button
+                                                variant="outline"
+                                                className="justify-start h-auto py-3 px-4 bg-white/5 border-white/10 hover:bg-white/10 hover:text-primary text-zinc-300 text-sm whitespace-normal text-left"
+                                                onClick={() => handleSendMessage(`What is the latest news affecting my portfolio (${portfolio.tickers.slice(0, 3).join(', ')})?`)}
+                                            >
+                                                <span>Check <strong>Portfolio News</strong></span>
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button
+                                            variant="outline"
+                                            className="justify-start h-auto py-3 px-4 bg-white/5 border-white/10 hover:bg-white/10 hover:text-primary text-zinc-300 text-sm whitespace-normal text-left"
+                                            onClick={() => handleSendMessage("What is the current state of the S&P 500 and Nasdaq?")}
+                                        >
+                                            <span>Market <strong>Overview</strong></span>
+                                        </Button>
+                                    )}
+
+                                    <Button
+                                        variant="outline"
+                                        className="justify-start h-auto py-3 px-4 bg-white/5 border-white/10 hover:bg-white/10 hover:text-primary text-zinc-300 text-sm whitespace-normal text-left"
+                                        onClick={() => handleSendMessage("Identify 3 undervalued tech stocks based on current P/E ratios.")}
+                                    >
+                                        <span>Find <strong>Undervalued Stocks</strong></span>
+                                    </Button>
+                                </div>
                             </div>
                         )}
 

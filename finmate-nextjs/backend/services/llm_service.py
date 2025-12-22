@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from typing import List, Dict, Any
-from openai import OpenAI
+from langfuse.openai import OpenAI
 from duckduckgo_search import DDGS
 
 logger = logging.getLogger(__name__)
@@ -111,46 +111,183 @@ def analyze_news(news_item: Dict, portfolio: List[str]) -> Dict[str, Any]:
             "related_sources": []
         }
 
-def chat_with_data(query: str, context: str) -> str:
+from services.quote_service import get_quote_data
+from services.analysis_service import get_fundamentals, get_technical_indicators
+
+# ... existing imports ...
+
+TOOLS_SCHEMA = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_web",
+            "description": "Search the internet for current news, events, or verify facts. Use this for questions about 'latest', 'recent', 'today', or specific news verification.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query (e.g. 'Tesla earnings report Q3 2024')"
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_stock_price",
+            "description": "Get the current live stock price for a ticker symbol.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ticker": {
+                        "type": "string",
+                        "description": "The stock ticker symbol (e.g. AAPL, TSLA)"
+                    }
+                },
+                "required": ["ticker"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_fundamentals",
+            "description": "Get fundamental data (P/E ratio, Market Cap, Dividend Yield, High/Low) for a company.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ticker": {
+                        "type": "string",
+                        "description": "The stock ticker symbol (e.g. MSFT)"
+                    }
+                },
+                "required": ["ticker"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_technical_indicators",
+            "description": "Get technical indicators (RSI, 50-day SMA, Overbought/Oversold signal) for a stock.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ticker": {
+                        "type": "string",
+                        "description": "The stock ticker symbol (e.g. BTC-USD)"
+                    }
+                },
+                "required": ["ticker"]
+            }
+        }
+    }
+]
+
+def get_stock_price_tool(ticker: str) -> str:
+    """Tool wrapper for stock price"""
+    data = get_quote_data(ticker)
+    if data:
+        return json.dumps(data)
+    return f"Could not find price for {ticker}"
+
+def get_fundamentals_tool(ticker: str) -> str:
+    """Tool wrapper for fundamentals"""
+    data = get_fundamentals(ticker)
+    if data:
+        return json.dumps(data)
+    return f"Could not find fundamentals for {ticker}"
+
+def get_technicals_tool(ticker: str) -> str:
+    """Tool wrapper for technicals"""
+    data = get_technical_indicators(ticker)
+    if data:
+        return json.dumps(data)
+    return f"Could not calculate technicals for {ticker}"
+
+def chat_with_data(query: str, context: str, history: List[Dict] = []) -> str:
     """
-    Chat with the AI. Includes web search capability if needed.
+    Agentic Chat Loop with Tool execution.
     """
     
-    # Simple keyword check to see if we should search
-    # (In a real agent, we'd look for function calling, but keeping it simple here)
-    use_search = any(kw in query.lower() for kw in ['latest', 'current', 'today', 'price', 'news', 'search'])
+    # System Prompt
+    system_prompt = f"""You are Senhor Finanças, an expert financial AI assistant.
     
-    search_results = ""
-    if use_search:
-        search_results = search_web(query, max_results=3)
-    
-    prompt = f"""
-    You are Senhor Finanças, an expert financial assistant.
-    
-    Context (News, Portfolio, Documents):
+    Context Information:
     {context}
     
-    {search_results}
-    
-    User Query: {query}
-    
     Instructions:
-    - Answer the user's question.
-    - If search results are provided, prioritize them for "latest" info.
-    - Be concise, professional, and helpful.
+    1. You have access to tools: 
+       - 'search_web' (news/events)
+       - 'get_stock_price' (live price)
+       - 'get_fundamentals' (valuation, market cap)
+       - 'get_technical_indicators' (RSI, trends)
+    2. USE TOOLS FREQUENTLY. 
+       - If asked "Is Tesla overvalued?", call 'get_fundamentals'.
+       - If asked "Should I buy Bitcoin now?", call 'get_technical_indicators' to check RSI.
+    3. Do not rely on your internal training data for recent events or prices.
+    4. Provide data-driven answers citing the specific metrics (e.g., "RSI is 72, which suggests...").
+    5. Be concise and professional.
     """
     
-    try:
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": "You are a helpful financial assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5
-        )
-        return response.choices[0].message.content
-        
-    except Exception as e:
-        logger.error(f"Chat failed: {e}")
-        return f"I encountered an error. Details: {str(e)}"
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Add history (simple format for now, limited to last few)
+    # history comes in as [{"role": "user", "content": ...}]
+    messages.extend(history[-6:]) 
+    
+    messages.append({"role": "user", "content": query})
+    
+    # Tool execution loop (limit 3 turns)
+    for _ in range(3):
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=messages,
+                tools=TOOLS_SCHEMA,
+                tool_choice="auto",
+                temperature=0.3
+            )
+            
+            message = response.choices[0].message
+            messages.append(message) # Add assistant response to history
+            
+            # Check for tool calls
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    fn_name = tool_call.function.name
+                    args = json.loads(tool_call.function.arguments)
+                    
+                    logger.info(f"Agent calling tool: {fn_name} with {args}")
+                    
+                    result_content = ""
+                    if fn_name == "search_web":
+                        result_content = search_web(args["query"])
+                    elif fn_name == "get_stock_price":
+                        result_content = get_stock_price_tool(args["ticker"])
+                    elif fn_name == "get_fundamentals":
+                        result_content = get_fundamentals_tool(args["ticker"])
+                    elif fn_name == "get_technical_indicators":
+                        result_content = get_technicals_tool(args["ticker"])
+                    else:
+                        result_content = "Unknown tool"
+                        
+                    # Feed tool result back
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": result_content
+                    })
+                # Loop continues to let LLM process the tool result
+            else:
+                # No tool calls, we have the final answer
+                return message.content
+                
+        except Exception as e:
+            logger.error(f"Agent Loop Error: {e}")
+            return f"I encountered a technical issue: {str(e)}"
+            
+    return messages[-1].content or "I'm thinking..."

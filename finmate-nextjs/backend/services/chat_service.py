@@ -7,12 +7,12 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 class ChatService:
-    def get_conversations(self) -> List[Dict]:
-        """Fetch all conversations ordered by last updated"""
+    def get_conversations(self, user_id: str) -> List[Dict]:
+        """Fetch all conversations for a user ordered by last updated"""
         if not supabase:
             return []
         try:
-            res = supabase.table("conversations").select("*").order("updated_at", desc=True).execute()
+            res = supabase.table("conversations").select("*").eq("user_id", user_id).order("updated_at", desc=True).execute()
             return res.data
         except Exception as e:
             logger.error(f"Error fetching conversations: {e}")
@@ -23,18 +23,19 @@ class ChatService:
         if not supabase:
             return []
         try:
+            # RLS or simple ID match
             res = supabase.table("messages").select("*").eq("conversation_id", conversation_id).order("created_at", desc=False).execute()
             return res.data
         except Exception as e:
             logger.error(f"Error fetching messages: {e}")
             return []
 
-    def create_conversation(self, title: str = "New Chat") -> Optional[str]:
+    def create_conversation(self, user_id: str, title: str = "New Chat") -> Optional[str]:
         """Create a new conversation and return its ID"""
         if not supabase:
             return str(uuid.uuid4()) # Fallback for ephemeral
         try:
-            data = {"title": title}
+            data = {"title": title, "user_id": user_id}
             res = supabase.table("conversations").insert(data).execute()
             if res.data:
                 return res.data[0]['id']

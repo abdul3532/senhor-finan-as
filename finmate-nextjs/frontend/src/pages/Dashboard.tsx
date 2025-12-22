@@ -133,9 +133,11 @@ export default function Dashboard() {
                 ) : (
                     <Card className="bg-card border-border p-8 text-center">
                         <p className="text-muted-foreground mb-4">No assets in your portfolio yet.</p>
-                        <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
-                            Add Your First Asset
-                        </Button>
+                        <Link to="/portfolio">
+                            <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                                Add Your First Asset
+                            </Button>
+                        </Link>
                     </Card>
                 )}
             </section>

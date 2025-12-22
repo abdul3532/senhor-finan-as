@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from models import ChatRequest, ChatMessage
 from services import llm_service, portfolio_service, chat_service
+from dependencies import get_current_user
 from PyPDF2 import PdfReader
 from io import BytesIO
 from typing import List
@@ -9,18 +10,18 @@ import uuid
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 @router.get("/history", response_model=List[dict])
-async def get_history():
+async def get_history(user_id: str = Depends(get_current_user)):
     """Get all conversation history"""
-    return chat_service.chat_service.get_conversations()
+    return chat_service.chat_service.get_conversations(user_id)
 
 @router.get("/{conversation_id}/messages", response_model=List[ChatMessage])
-async def get_messages(conversation_id: str):
+async def get_messages(conversation_id: str, user_id: str = Depends(get_current_user)):
     """Get messages for a conversation"""
     messages = chat_service.chat_service.get_messages(conversation_id)
     return messages
 
 @router.post("", response_model=ChatMessage)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, user_id: str = Depends(get_current_user)):
     """Chat with the AI assistant"""
     try:
         # 1. Manage Conversation ID
@@ -28,7 +29,7 @@ async def chat(request: ChatRequest):
         if not conversation_id:
             # Generate title from query (first 30 chars for now)
             title = request.query[:30] + "..."
-            conversation_id = chat_service.chat_service.create_conversation(title)
+            conversation_id = chat_service.chat_service.create_conversation(user_id, title)
         
         # 2. Save User Message
         chat_service.chat_service.add_message(conversation_id, "user", request.query)
@@ -41,7 +42,7 @@ async def chat(request: ChatRequest):
         if request.portfolio:
             context += f"Portfolio: {', '.join(request.portfolio)}\n\n"
         else:
-            portfolio = portfolio_service.load_portfolio()
+            portfolio = portfolio_service.load_portfolio(user_id)
             if portfolio:
                 context += f"Portfolio: {', '.join(portfolio)}\n\n"
         
@@ -62,30 +63,8 @@ async def chat(request: ChatRequest):
         # 5. Save Assistant Message
         chat_service.chat_service.add_message(conversation_id, "assistant", response_text)
         
-        # Return response including conversation_id so frontend can continue
-        # Note: ChatMessage model needs to transport this ID if we want frontend to sync easily, 
-        # or we rely on frontend keeping the ID.
-        # Actually our ChatMessage model doesn't have conversation_id, but the ResponseModel is ChatMessage.
-        # We might need to handle this. For now, we return the message content.
-        # Ideally, we should return a wrapper or the message object with conversation_id.
-        # Let's hack it: The frontend 'ChatMessage' type vs backend 'ChatMessage' model.
-        # Our backend model has 'id', 'role', 'content'.
-        # We'll just return the message content for now, but frontend needs the ID to continue the chat.
-        # Wait, if `conversation_id` is new, frontend doesn't know it!
-        # Solution: Return a structure that includes the conversation_id.
-        # BUT the return type is `ChatMessage`. 
-        # Strategy: We added `id` to ChatMessage model. We can return it.
-        # But `conversation_id` is missing.
-        # Let's add `conversation_id` to ChatMessage response temporarily or rely on `id` if it maps?
-        # No. The proper way is updating the return model.
-        # For this step, I will stick to returning the message.
-        # CRITICAL: Frontend needs the new conversation_id.
-        # I will implicitly return it in the ID field? No that's messy.
-        # I will update the response model to include `conversation_id`.
-        pass 
-        
         return ChatMessage(
-            id=str(uuid.uuid4()), # We could fetch real ID but ephemeral for response is fine
+            id=str(uuid.uuid4()), 
             conversation_id=conversation_id,
             role="assistant",
             content=response_text
@@ -95,7 +74,7 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
 @router.post("/upload-document")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     """Upload and extract text from a PDF document"""
     try:
         if not file.filename.endswith('.pdf'):
