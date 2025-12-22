@@ -4,10 +4,82 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { usePortfolio, useAddTicker, useRemoveTicker } from "@/lib/api";
-import { Plus, Trash2, Wallet, TrendingUp, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, Trash2, Wallet, TrendingUp, TrendingDown, Search } from "lucide-react";
 
+
+import { useStockQuote } from "@/lib/api";
 import { CompanyDetailModal } from "@/components/CompanyDetailModal";
+
+interface TickerCardProps {
+    ticker: string;
+    details: { name: string, icon: string };
+    onSelect: () => void;
+    onRemove: () => void;
+    isRemoving: boolean;
+}
+
+function TickerCard({ ticker, details, onSelect, onRemove, isRemoving }: TickerCardProps) {
+    const { data: quote, isLoading } = useStockQuote(ticker);
+
+    return (
+        <div
+            onClick={onSelect}
+            className="group flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:border-white/10 hover:translate-x-1 cursor-pointer"
+        >
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center text-2xl border border-white/10">
+                    {details.icon}
+                </div>
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-lg">{ticker}</h3>
+                        <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/20 text-[10px] px-1.5 h-5">
+                            LIVE
+                        </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{details.name}</p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+                <div className="hidden sm:block text-right mr-4">
+                    {isLoading ? (
+                        <div className="flex flex-col items-end gap-1">
+                            <div className="h-5 w-20 bg-white/10 rounded animate-pulse" />
+                            <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
+                        </div>
+                    ) : quote ? (
+                        <div className="flex flex-col items-end">
+                            <div className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
+                                ${quote.price.toFixed(2)}
+                            </div>
+                            <div className={`flex items-center gap-1 text-xs font-medium ${quote.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {quote.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                <span>{quote.change > 0 ? '+' : ''}{quote.change.toFixed(2)} ({quote.change_percent.toFixed(2)}%)</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-1 text-zinc-500 text-sm font-medium">
+                            <span>Unavailable</span>
+                        </div>
+                    )}
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove();
+                    }}
+                    disabled={isRemoving}
+                    className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                    <Trash2 className="h-5 w-5" />
+                </Button>
+            </div>
+        </div>
+    );
+}
 
 export default function Portfolio() {
     const [newTicker, setNewTicker] = useState("");
@@ -146,49 +218,16 @@ export default function Portfolio() {
                             )}
 
                             <div className="grid gap-3">
-                                {portfolio?.tickers.map((ticker) => {
-                                    const details = getCompanyDetails(ticker);
-                                    return (
-                                        <div
-                                            key={ticker}
-                                            onClick={() => setSelectedCompanyTicker(ticker)}
-                                            className="group flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:border-white/10 hover:translate-x-1 cursor-pointer"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center text-2xl border border-white/10">
-                                                    {details.icon}
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className="font-bold text-white text-lg">{ticker}</h3>
-                                                        <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/20 text-[10px] px-1.5 h-5">
-                                                            ACTIVE
-                                                        </Badge>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">{details.name}</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-4">
-                                                <div className="hidden sm:block text-right mr-4">
-                                                    <div className="flex items-center gap-1 text-green-400 text-sm font-medium">
-                                                        <TrendingUp className="w-3 h-3" />
-                                                        <span>Monitoring</span>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => handleRemoveTicker(ticker)}
-                                                    disabled={removeTicker.isPending}
-                                                    className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                                >
-                                                    <Trash2 className="h-5 w-5" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {portfolio?.tickers.map((ticker) => (
+                                    <TickerCard
+                                        key={ticker}
+                                        ticker={ticker}
+                                        details={getCompanyDetails(ticker)}
+                                        onSelect={() => setSelectedCompanyTicker(ticker)}
+                                        onRemove={() => handleRemoveTicker(ticker)}
+                                        isRemoving={removeTicker.isPending}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </Card>

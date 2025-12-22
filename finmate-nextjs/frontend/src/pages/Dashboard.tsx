@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { useNews, useRefreshNews, usePortfolio, useGenerateReport } from "@/lib/api";
-import { RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react";
+import { RefreshCw, Download } from "lucide-react";
 import type { NewsItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NewsCard } from "@/components/NewsCard";
 import { NewsDetailModal } from "@/components/NewsDetailModal";
 import { CompanyDetailModal } from "@/components/CompanyDetailModal";
+import { DashboardTickerCard } from "@/components/DashboardTickerCard";
 
 export default function Dashboard() {
     const { data: portfolio } = usePortfolio();
@@ -111,74 +112,15 @@ export default function Dashboard() {
 
                 {portfolio && portfolio.tickers.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {portfolio.tickers.map((ticker) => {
-                            const details = getCompanyDetails(ticker);
-                            // Find news for this ticker to determine impact
-                            const tickerNews = news?.filter(n => n.affected_tickers.includes(ticker)) || [];
-                            const impactScore = tickerNews.reduce((acc, n) => {
-                                if (n.impact === 'positive') return acc + 1;
-                                if (n.impact === 'negative') return acc - 1;
-                                return acc;
-                            }, 0);
-
-                            const isPositive = impactScore >= 0;
-
-                            return (
-                                <div
-                                    key={ticker}
-                                    onClick={() => setSelectedCompanyTicker(ticker)}
-                                    className={cn(
-                                        "relative overflow-hidden rounded-2xl p-5 border transition-all duration-300 hover:scale-[1.02] cursor-pointer group bg-card hover:shadow-lg",
-                                        isPositive
-                                            ? "dark:bg-gradient-to-br dark:from-green-950/30 dark:to-black border-green-500/20 hover:border-green-500/40"
-                                            : "dark:bg-gradient-to-br dark:from-red-950/30 dark:to-black border-red-500/20 hover:border-red-500/40"
-                                    )}
-                                >
-                                    {/* Light mode alternate background */}
-                                    <div className={cn("absolute inset-0 opacity-0 dark:opacity-0 transition-opacity",
-                                        isPositive ? "bg-green-50/50" : "bg-red-50/50",
-                                        "group-hover:opacity-100 dark:group-hover:opacity-0"
-                                    )} />
-
-                                    <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center text-xl backdrop-blur-sm">
-                                                {details.icon}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-foreground text-lg leading-none">{ticker}</h3>
-                                                <p className="text-xs text-muted-foreground mt-1">{details.name}</p>
-                                            </div>
-                                        </div>
-                                        {isPositive ? (
-                                            <TrendingUp className="w-5 h-5 text-green-500" />
-                                        ) : (
-                                            <TrendingDown className="w-5 h-5 text-red-500" />
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center justify-between mt-2 relative z-10">
-                                        <Badge variant="outline" className="bg-background/50 border-border text-xs font-normal">
-                                            {tickerNews.length} news items
-                                        </Badge>
-
-                                        {/* Mini sparkline simulation */}
-                                        <div className="flex gap-0.5 items-end h-6">
-                                            {[...Array(5)].map((_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className={cn(
-                                                        "w-1 rounded-t-sm",
-                                                        isPositive ? "bg-green-500/40" : "bg-red-500/40"
-                                                    )}
-                                                    style={{ height: `${Math.random() * 100}%` }}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {portfolio.tickers.map((ticker) => (
+                            <DashboardTickerCard
+                                key={ticker}
+                                ticker={ticker}
+                                details={getCompanyDetails(ticker)}
+                                news={news || []}
+                                onSelect={() => setSelectedCompanyTicker(ticker)}
+                            />
+                        ))}
 
                         {/* Add New Ticker Card */}
                         <Link to="/portfolio" className="rounded-2xl p-5 border border-dashed border-border bg-card/50 flex flex-col items-center justify-center text-center hover:bg-card transition-colors cursor-pointer min-h-[140px]">
