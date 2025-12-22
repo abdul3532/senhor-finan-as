@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 from models import NewsItem
 from services import news_service, llm_service, portfolio_service
+from dependencies import get_current_user
 import uuid
 import logging
 
@@ -19,11 +20,11 @@ async def get_news():
         raise HTTPException(status_code=500, detail=f"Failed to fetch news: {str(e)}")
 
 @router.post("/refresh", response_model=List[NewsItem])
-async def refresh_news():
+async def refresh_news(user_id: str = Depends(get_current_user)):
     """Fetch fresh news, analyze, and save to DB"""
     try:
         # Get portfolio for analysis context
-        portfolio = portfolio_service.load_portfolio()
+        portfolio = portfolio_service.load_portfolio(user_id)
         
         # Fetch raw news (DuckDuckGo)
         raw_news = news_service.fetch_news()
