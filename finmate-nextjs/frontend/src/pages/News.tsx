@@ -155,7 +155,7 @@ export default function NewsPage() {
             </div>
 
             {/* Content */}
-            <div className="grid gap-4 max-w-5xl mx-auto">
+            <div className="flex flex-col gap-4 max-w-5xl mx-auto">
                 {isLoading ? (
                     [1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="h-48 bg-muted/50 rounded-xl animate-pulse" />
