@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Globe, Banknote, Activity } from "lucide-react";
+import { Building2, Globe, Banknote, Activity, TrendingUp, TrendingDown, RefreshCcw } from "lucide-react";
 import type { CompanyProfile } from "@/lib/types";
+import { useStockQuote } from "@/lib/api";
 
 interface CompanyDetailModalProps {
     isOpen: boolean;
@@ -12,6 +13,9 @@ interface CompanyDetailModalProps {
 
 export function CompanyDetailModal({ isOpen, onClose, ticker, profile }: CompanyDetailModalProps) {
     if (!ticker) return null;
+
+    // Use the new hook to get live data
+    const { data: quote, isLoading: isQuoteLoading } = useStockQuote(isOpen ? ticker : null);
 
     // Fallback if profile is missing (e.g. old data)
     const displayProfile = profile || {
@@ -58,6 +62,32 @@ export function CompanyDetailModal({ isOpen, onClose, ticker, profile }: Company
                                     )}
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Live Price Widget */}
+                        <div className="flex flex-col items-end">
+                            {isQuoteLoading ? (
+                                <div className="flex items-center gap-2 text-zinc-500 animate-pulse bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
+                                    <RefreshCcw className="w-4 h-4 animate-spin" />
+                                    <span className="text-sm font-mono">Loading Price...</span>
+                                </div>
+                            ) : quote ? (
+                                <div className={`flex flex-col items-end px-3 py-1.5 rounded-lg border bg-zinc-900/50 ${quote.change >= 0 ? 'border-green-900/30' : 'border-red-900/30'}`}>
+                                    <div className="text-2xl font-bold font-mono tracking-tight flex items-center gap-2">
+                                        {quote.currency === 'USD' ? '$' : ''}{quote.price.toFixed(2)}
+                                        <span className={`text-xs px-1.5 py-0.5 rounded ${quote.change >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                            {quote.currency}
+                                        </span>
+                                    </div>
+                                    <div className={`flex items-center gap-1 text-sm font-medium ${quote.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {quote.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                        <span>{quote.change > 0 ? '+' : ''}{quote.change.toFixed(2)}</span>
+                                        <span>({quote.change_percent.toFixed(2)}%)</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-zinc-500 text-sm italic">Price unavailable</div>
+                            )}
                         </div>
                     </div>
                 </DialogHeader>

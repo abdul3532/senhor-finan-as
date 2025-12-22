@@ -15,6 +15,20 @@ export const usePortfolio = () => {
     });
 };
 
+export const useStockQuote = (ticker: string | null) => {
+    return useQuery({
+        queryKey: ['quote', ticker],
+        queryFn: async () => {
+            if (!ticker) return null;
+            const res = await fetch(`${API_BASE}/api/quote/${ticker}`);
+            if (!res.ok) throw new Error('Failed to fetch quote');
+            return res.json();
+        },
+        enabled: !!ticker,
+        refetchInterval: 10000, // Refresh every 10s
+    });
+};
+
 export const useAddTicker = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -89,7 +103,7 @@ export const useChat = () => {
             });
             if (!res.ok) throw new Error('Chat request failed');
             return res.json();
-        }
+        },
     });
 };
 

@@ -15,10 +15,15 @@ async def get_portfolio():
 async def add_ticker(request: AddTickerRequest):
     """Add a ticker to the portfolio"""
     try:
-        portfolio_service.add_ticker(request.ticker)
-        # Reload full state
-        tickers = portfolio_service.load_portfolio()
+        tickers, new_profile = portfolio_service.add_ticker(request.ticker)
+        
+        # Load existing profiles
         profiles = portfolio_service.load_profiles()
+        
+        # Ensure new profile is included (even if DB sync lagged)
+        if new_profile:
+            profiles[request.ticker.upper()] = new_profile
+            
         return Portfolio(tickers=tickers, profiles=profiles)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

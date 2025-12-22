@@ -104,7 +104,9 @@ def fetch_company_profile(ticker: str) -> Dict[str, Any]:
 
 # --- Actions ---
 
-def add_ticker(ticker: str) -> List[str]:
+from typing import List, Dict, Any, Tuple
+
+def add_ticker(ticker: str) -> Tuple[List[str], Dict[str, Any]]:
     ticker = ticker.upper()
     
     if not supabase:
@@ -127,13 +129,14 @@ def add_ticker(ticker: str) -> List[str]:
             }).execute()
         
         # 2. Add/Update Profile
-        fetch_company_profile(ticker)
+        profile = fetch_company_profile(ticker)
         
     except Exception as e:
         logger.error(f"Error adding ticker {ticker}: {e}")
+        profile = {}
         
-    # Return updated list
-    return load_portfolio()
+    # Return updated list AND the profile
+    return load_portfolio(), profile
 
 def remove_ticker(ticker: str) -> List[str]:
     ticker = ticker.upper()

@@ -4,9 +4,17 @@ from dotenv import load_dotenv
 import logging
 
 # Load environment variables
-load_dotenv()
+import os
+from pathlib import Path
 
-from api import portfolio, news, chat, reports
+env_path = Path(__file__).parent / ".env"
+success = load_dotenv(dotenv_path=env_path)
+
+print(f"DEBUG: .env path: {env_path}")
+print(f"DEBUG: .env loaded: {success}")
+print(f"DEBUG: OPENAI_API_KEY present: {'OPENAI_API_KEY' in os.environ}")
+
+from api import portfolio, news, chat, reports, quote
 
 # Setup logging
 logging.basicConfig(
@@ -35,6 +43,7 @@ app.include_router(portfolio.router)
 app.include_router(news.router)
 app.include_router(chat.router)
 app.include_router(reports.router)
+app.include_router(quote.router)
 
 @app.get("/")
 async def root():
