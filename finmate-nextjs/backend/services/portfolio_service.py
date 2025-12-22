@@ -44,7 +44,8 @@ def load_portfolio(user_id: str) -> List[str]:
     try:
         pid = get_user_portfolio_id(user_id)
         res = supabase.table("portfolio_items").select("ticker").eq("portfolio_id", pid).execute()
-        return [item['ticker'] for item in res.data]
+        # Ensure only strings are returned
+        return [str(item['ticker']) for item in res.data if item.get('ticker')]
     except Exception as e:
         logger.error(f"Failed to load portfolio for user {user_id}: {e}")
         return []
