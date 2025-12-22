@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Mail, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
     const [searchParams] = useSearchParams();
@@ -13,6 +13,8 @@ export default function Auth() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -23,14 +25,14 @@ export default function Auth() {
 
         try {
             if (mode === "signup") {
+                if (password !== confirmPassword) {
+                    throw new Error("Passwords do not match");
+                }
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
                 });
                 if (error) throw error;
-                // Signup successful, usually check email, but for dev we might auto-login?
-                // Depending on Supabase settings (Email Confirm). 
-                // We'll assume success message roughly.
                 alert("Check your email for the confirmation link!");
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
@@ -69,7 +71,7 @@ export default function Auth() {
                 <Card className="glass-card border-border/50 p-6 backdrop-blur-xl">
                     <form onSubmit={handleAuth} className="space-y-4">
                         {error && (
-                            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 rounded-lg">
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-lg font-medium">
                                 {error}
                             </div>
                         )}
@@ -95,17 +97,47 @@ export default function Auth() {
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
-                                    className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50"
+                                    className="pl-10 pr-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     minLength={6}
                                     autoComplete="current-password"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                        <Eye className="h-4 w-4" />
+                                    )}
+                                </button>
                             </div>
                         </div>
+
+                        {mode === "signup" && (
+                            <div className="space-y-2 animate-fade-in-up">
+                                <label className="text-sm font-medium text-foreground">Confirm Password</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        autoComplete="new-password"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <Button type="submit" className="w-full bg-primary hover:bg-primary/90 mt-2" disabled={loading}>
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

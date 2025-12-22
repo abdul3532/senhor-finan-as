@@ -23,12 +23,16 @@ async def generate_report(news_items: List[NewsItem], user_id: str = Depends(get
         # Generate PDF
         pdf_bytes = reporting_service.generate_briefing(news_dicts, portfolio)
         
-        # Return PDF as response
+        # Return PDF as response with date-stamped filename
+        from datetime import datetime
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        filename = f"senhor_financas_briefing_{date_str}.pdf"
+
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": "attachment; filename=senhor_financas_briefing.pdf"
+                "Content-Disposition": f"attachment; filename={filename}"
             }
         )
     

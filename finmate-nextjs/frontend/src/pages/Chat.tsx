@@ -8,6 +8,8 @@ import { Send, Upload, FileText, Bot, User, Sparkles, Paperclip, X, History, Plu
 import type { ChatMessage, Conversation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function Chat() {
     const queryClient = useQueryClient();
@@ -317,7 +319,14 @@ export default function Chat() {
                                     {message.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                                 </div>
                                 <div className={cn("p-4 rounded-2xl text-sm leading-relaxed shadow-md", message.role === "user" ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-card border border-border text-foreground rounded-tl-sm backdrop-blur-sm")}>
-                                    <p className="whitespace-pre-wrap">{message.content}</p>
+                                    <div className={cn(
+                                        "prose prose-sm dark:prose-invert max-w-none break-words",
+                                        message.role === "user" ? "prose-p:text-primary-foreground prose-headings:text-primary-foreground prose-strong:text-primary-foreground" : ""
+                                    )}>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {message.content}
+                                        </ReactMarkdown>
+                                    </div>
                                 </div>
                             </div>
                         ))}
