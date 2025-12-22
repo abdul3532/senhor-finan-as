@@ -4,6 +4,10 @@
 
 > *Capstone Project 2025/2026 - NOVA IMS Bachelor’s Degree in Data Science*
 
+![Status](https://img.shields.io/badge/Status-MVP_Complete-green)
+![Stack](https://img.shields.io/badge/Stack-FastAPI%20%7C%20React%20%7C%20Supabase-blue)
+![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4o-purple)
+
 ## 📖 Project Overview
 **Senhor Finanças** is an autonomous financial assistant designed to democratize professional-grade market intelligence. Unlike traditional portfolio trackers, it leverages **Agentic AI** to actively analyze news, verify facts across the web, and provide actionable insights for your specific portfolio holdings.
 
@@ -143,8 +147,6 @@ We use **Langfuse** to monitor our AI Agent's performance. Traces include:
 *   User feedback scores.
 
 ---
-
-## 👥 Team
 ## 👥 Team
 
 *   **Abdul** - Lead Developer & Architect - *Full Stack Development & System Design*
