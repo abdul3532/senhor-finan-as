@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Globe } from "lucide-react";
 import type { NewsItem } from "@/lib/types";
 
 interface NewsDetailModalProps {
@@ -31,29 +31,14 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
                     </DialogDescription>
 
                     <div className="space-y-4">
-                        {/* Related Sources Section */}
-                        {newsItem.related_sources && newsItem.related_sources.length > 0 && (
-                            <div className="space-y-3 pt-2 border-t border-border/50">
-                                <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                    Related Coverage ({newsItem.related_sources.length})
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {newsItem.related_sources.map((source, idx) => (
-                                        <a
-                                            key={idx}
-                                            href={source}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-xs bg-secondary/50 hover:bg-secondary px-2 py-1 rounded-md text-foreground/80 transition-colors truncate max-w-[200px] flex items-center gap-1"
-                                        >
-                                            <ExternalLink className="h-3 w-3" />
-                                            {new URL(source).hostname.replace('www.', '')}
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* Summary Section - Moved to top as primary info */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-zinc-400 mb-2">Summary</h3>
+                            <p className="text-zinc-300 text-sm leading-relaxed">
+                                {newsItem.summary}
+                            </p>
+                        </div>
+
                         {/* Sentiment Bar Visualization */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
@@ -74,36 +59,15 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
                             </div>
                         </div>
 
-                        <div>
-                            <h3 className="text-sm font-semibold text-zinc-400 mb-2">Summary</h3>
-                            <p className="text-zinc-300 text-sm leading-relaxed">
-                                {newsItem.summary}
-                            </p>
-                        </div>
-
-                        {/* Read Full News Button */}
-                        {newsItem.link && (
-                            <Button
-                                variant="outline"
-                                className="rounded-full border-zinc-700 bg-transparent text-white hover:bg-zinc-800 h-8 text-xs gap-2"
-                                onClick={() => window.open(newsItem.link, '_blank')}
-                            >
-                                <ExternalLink className="w-3 h-3" />
-                                Read full news
-                            </Button>
-                        )}
-
+                        {/* Overall Impact Section */}
                         <div>
                             <h3 className="text-sm font-semibold text-zinc-400 mb-2">Overall Impact</h3>
                             <p className="text-zinc-300 text-sm leading-relaxed mb-3">
-                                {newsItem.impact_reason}
+                                {newsItem.impact_reason || "AI analysis of impact is pending or unavailable."}
                             </p>
 
-                            {/* Tags: Green for positive, Red for negative */}
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 text-xs">
                                 {newsItem.affected_tickers.map((ticker) => {
-                                    // Heuristic: if item is "negative", assume all tickers are negatively affected unless we parse improved per-ticker sentiment.
-                                    // For now, using item.impact
                                     const isNegative = newsItem.impact === 'negative' || newsItem.sentiment_score < 4;
                                     const variantStyles = isNegative
                                         ? "bg-red-900/30 text-red-400 border-red-900/50 hover:bg-red-900/50"
@@ -118,6 +82,44 @@ export function NewsDetailModal({ isOpen, onClose, newsItem }: NewsDetailModalPr
                                 })}
                             </div>
                         </div>
+
+                        {/* Read Full News Button */}
+                        {newsItem.link && (
+                            <Button
+                                variant="outline"
+                                className="rounded-full border-zinc-700 bg-transparent text-white hover:bg-zinc-800 h-8 text-xs gap-2"
+                                onClick={() => window.open(newsItem.link, '_blank')}
+                            >
+                                <ExternalLink className="w-3 h-3" />
+                                Read full news
+                            </Button>
+                        )}
+
+                        {/* Related Sources / Verification */}
+                        {newsItem.related_sources && newsItem.related_sources.length > 0 && (
+                            <div className="space-y-2 pt-4 border-t border-zinc-800">
+                                <h3 className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                                    <Globe className="w-3 h-3" />
+                                    Verified Sources & Cross-Reference
+                                </h3>
+                                <div className="grid gap-2">
+                                    {newsItem.related_sources.map((source, idx) => (
+                                        <a
+                                            key={idx}
+                                            href={source}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 transition-colors group"
+                                        >
+                                            <span className="truncate text-zinc-300 font-mono">
+                                                {new URL(source).hostname.replace('www.', '')}
+                                            </span>
+                                            <ExternalLink className="h-3 w-3 text-zinc-500 group-hover:text-blue-400" />
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </DialogContent>

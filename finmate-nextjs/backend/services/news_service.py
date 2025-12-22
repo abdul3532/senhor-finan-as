@@ -27,24 +27,13 @@ PROCESSED_NEWS = [
     }
 ]
 
+from services import rss_service
+
 def fetch_news() -> List[Dict[str, Any]]:
-    """Fetch raw financial news from DuckDuckGo"""
+    """Fetch raw financial news from RSS Feeds"""
     try:
-        logger.info("Fetching news from DuckDuckGo...")
-        with DDGS() as ddgs:
-            # Broad search, could be refined
-            results = list(ddgs.news("finance news stock market", max_results=20))
-            
-        news_items = []
-        for r in results:
-            news_items.append({
-                "title": r.get("title"),
-                "link": r.get("url"),
-                "summary": r.get("body"),
-                "published": r.get("date"),
-                "source": r.get("source", "Unknown")
-            })
-        return news_items
+        # Use RSS for freshness/latest news
+        return rss_service.fetch_rss_news()
     except Exception as e:
         logger.error(f"Error fetching news: {e}")
         return []
@@ -65,7 +54,10 @@ def save_analyzed_news(news_item: NewsItem):
             "published_at": news_item.published, 
             "sentiment_score": news_item.sentiment_score,
             "risk_level": news_item.risk_level,
-            "impact_level": news_item.impact
+            "impact_level": news_item.impact,
+            # NEW FIELDS
+            "impact_reason": news_item.impact_reason,
+            "related_sources": news_item.related_sources
         }
         
         # upsert, match on url
@@ -114,11 +106,12 @@ def get_latest_news() -> List[NewsItem]:
                 category="General", 
                 affected_tickers=tickers,
                 impact=row['impact_level'] or "neutral",
-                impact_reason="", 
+                impact_reason=row.get('impact_reason', "") or "Analysis pending...", 
                 risk_level=row['risk_level'] or "medium",
                 link=row['url'],
                 published=row['published_at'],
-                source=row['source'] or "Unknown"
+                source=row['source'] or "Unknown",
+                related_sources=row.get('related_sources', []) or []
             )
             items.append(item)
         return items

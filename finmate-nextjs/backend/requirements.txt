@@ -6,6 +6,7 @@ PyPDF2==3.0.1
 pydantic
 python-multipart==0.0.20
 openai==1.57.2
-duckduckgo-search==5.3.0
-yfinance==0.2.33
+duckduckgo-search>=8.1.1
+yfinance==0.2.66
 supabase
+feedparser
